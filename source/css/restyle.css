@@ -831,9 +831,35 @@ html:not([data-theme='dark']) .container .flink .flink-list > .flink-list-item:f
        这块应当安静，不该再抢注意力
    --------------------------------------------------------------------------- */
 
+/* ---------------------------------------------------------------------------
+   ⚠️ 底色改成「微微透明」—— 为什么不用 backdrop-filter
+   ----------------------------------------------------------------------------
+   用户希望这块"粉色微微透明"，好和周围融在一起。
+
+   查了 ui-ux-pro-max 的 Glassmorphism 条目，它的配方是：
+     background: rgba(255,255,255,.15) + backdrop-filter: blur(15px) + 细边框
+   但它的实现清单里有一条**前提**：
+     ☐ Vibrant background verified（背后要有丰富的背景可供模糊）
+
+   本站这块面板坐在**纯白的文章卡片内部**，背后是一片纯白：
+     · backdrop-filter: blur() 模糊纯白 —— 视觉上完全没有变化，纯属浪费一个合成层
+     · rgba(255,255,255,.15) 叠在白底上 —— 几乎等于消失
+
+   所以只取它"半透明 + 细边框"这两条原则，**不加 blur**。
+   这也是 frontend-design 说的 "cut any decoration that does not serve the brief"。
+
+   半透明的实际效果（底色按文章卡片的 #FFFFFF 算）：
+     rgba(253,239,248,.55) 叠在白底上 ≈ #FEF6FB  —— 比原来的实色 #FDEFF8 更淡一层
+   文字对比度因此**变得更高**（底色越浅，深色字越清楚）：
+     #661A52 文章名 ≈ 11:1   ✅ 远超 4.5:1
+     #6B5560 小标签 ≈ 6.7:1  ✅ 小字也达标
+   --------------------------------------------------------------------------- */
+
 html:not([data-theme='dark']) #pagination .pagination-related {
-  background: #FDEFF8;
-  box-shadow: inset 0 0 0 1.5px #FBD4EE;
+  /* 微微透明的淡粉：让白色卡片透一点上来，比实色更轻、更贴周围 */
+  background: rgba(253, 239, 248, .55);
+  /* 描边也带一点透明度，边缘不会显得像一圈实线 */
+  box-shadow: inset 0 0 0 1.5px rgba(251, 212, 238, .9);
   border-radius: 8px;
   transition: box-shadow .25s ease, background-color .25s ease, transform .25s ease;
 }
@@ -844,9 +870,10 @@ html:not([data-theme='dark']) #pagination .pagination-related .cover {
   opacity: .12;
 }
 
-/* 悬停：和友链卡片同一套反馈（粉描边 + 轻抬） */
+/* 悬停：半透明 → 几乎实白，配合粉描边与轻抬。
+   这个"由透到实"的变化本身就在提示"聚焦到这一块了"。 */
 html:not([data-theme='dark']) #pagination .pagination-related:hover {
-  background: #FFFFFF;
+  background: rgba(255, 255, 255, .92);
   box-shadow: inset 0 0 0 1.5px #F79FDD,
               0 6px 16px -8px rgba(175, 29, 136, .28);
   transform: translateY(-2px);
