@@ -306,7 +306,9 @@ aside:
       link: https://github.com/AsiaHD114
   card_announcement:
     enable: true
-    content: This is my Blog
+    # 侧栏「公告」卡片里的文字。
+    # 支持 HTML（比如 <a> 链接、<br> 换行），纯文字也可以。
+    content: 别看了，没有重要的事awa
   card_recent_post:
     enable: true
     # 设为 0 表示显示全部
