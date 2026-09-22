@@ -1088,16 +1088,8 @@ html:not([data-theme='dark']) #pagination .pagination-related .info.text-right {
   padding-right: 44px;
 }
 
-/* 上下两行的层次：小标签更小更散，标题更大更实 */
-html:not([data-theme='dark']) #pagination .pagination-related .info .info-1 .info-item-1 {
-  font-size: .8em;
-  letter-spacing: .08em;
-  margin-bottom: 2px;
-}
-html:not([data-theme='dark']) #pagination .pagination-related .info .info-1 .info-item-2 {
-  font-size: 1.05em;
-  line-height: 1.4;
-}
+/* 字号保持主题原样 —— 这一轮只改高度、箭头和文字避让。
+   （曾经顺手调过标签字号与字距，但用户选的是"其余不变"，所以回退掉了。） */
 
 /* 减少动效：箭头不再滑动，但颜色变化保留（不然悬停就没反馈了） */
 @media (prefers-reduced-motion: reduce) {
