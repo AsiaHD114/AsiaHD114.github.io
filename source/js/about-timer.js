@@ -29,7 +29,9 @@
       针对的是「偶尔变化的异步徽章」，不是每秒跳的表。所以摘要**不是**
       live region —— 只在用户主动读到它时给出当前值。
 
-   ⚠️ 配置：只改下面的 START / LABEL / COUNTDOWN 即可。
+   ⚠️ 配置：改 START / COUNTDOWN 就改下面的常量。
+      但**显示的文案不在这里** —— 它写在 source/about/index.md 的
+      data-at="label" 里，以那份为准；下面的 LABEL 只是页面为空时的兜底。
    ============================================================================ */
 (function () {
   'use strict';
@@ -45,7 +47,10 @@
      ──────────────────────────────────────────────────────────────────────── */
   var START = { year: 2006, month: 12, day: 27, hour: 0, minute: 0, second: 0 };
 
-  var LABEL = '这是我们诞生于世的';
+  /* ⚠️ 这只是**兜底**文案：页面里（source/about/index.md 的 data-at="label"）
+     写了文字就优先用页面里的，这里仅在页面为空时生效。
+     要改显示的文字，去改 Markdown，不用改这里。 */
+  var LABEL = '这是我诞生于世的';
 
   var COUNTDOWN = {
     label: '生日倒计时',
@@ -238,8 +243,16 @@
     els = collect();
     if (!els) return;
 
-    /* 文案也从这里填，避免在 Markdown 里再维护一份 */
-    els.label.textContent = LABEL;
+    /* 文案：**以 Markdown 里写的为准** —— 那才是作者会去改的地方
+       （source/about/index.md 的 data-at="label"）。页面里写了就保留，
+       没写才回退到下面的 LABEL 常量兜底。
+
+       ⚠️ 这里原先无条件写成 els.label.textContent = LABEL，
+          结果是「在 Markdown 里改了文案却看不到变化」——
+          因为页面加载后 JS 会把它覆盖回去。实测踩过。 */
+    if (!els.label.textContent.trim()) {
+      els.label.textContent = LABEL;
+    }
 
     /* 没有可用的倒计时目标就整行隐藏 */
     if (resolveTarget(new Date())) {
