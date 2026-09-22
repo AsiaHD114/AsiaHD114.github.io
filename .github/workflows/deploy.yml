@@ -51,6 +51,20 @@ jobs:
 
       - name: 配置 Pages
         uses: actions/configure-pages@v5
+        with:
+          # enablement: true —— 如果仓库还没启用 Pages，这一步会顺手启用它。
+          # 需要 GITHUB_TOKEN 带 pages: write 权限，上面的 permissions 已经给了。
+          #
+          # 实测背景：第一次跑的时候这一步失败，日志指向
+          # "Please verify that the repository has Pages enabled and configured to
+          #  build using GitHub Actions" —— 因为仓库刚建、Pages 还是关的。
+          # 加上这个参数后，新仓库首次推送也能自己走通，不用先手动去 Settings 点一遍。
+          #
+          # ⚠️ 注意：它只能"启用 Pages"，不能替你改"来源"。
+          #    如果 Settings → Pages → Source 被设成 "Deploy from a branch"，
+          #    这里会成功、但后面的 deploy-pages 仍然会失败 ——
+          #    来源必须是 **GitHub Actions**。
+          enablement: true
 
       - name: 准备 Node
         uses: actions/setup-node@v4
