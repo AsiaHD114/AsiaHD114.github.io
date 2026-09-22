@@ -2,6 +2,10 @@
 title: 友情链接喵
 date: 2026-09-20 20:30:00
 type: link
+# 这一页不显示评论区。
+# 主题 layout/page.pug 的判据是 page.comments !== false，
+# 写在 front-matter 里只影响本页，其他页面的评论不受影响。
+comments: false
 ---
 
 <!--

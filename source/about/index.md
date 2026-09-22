@@ -5,6 +5,9 @@ date: 2026-09-20 20:30:00
 # 所以写在 front-matter 就只影响本页，首页与文章页的侧栏不受影响）。
 # 隐藏后页面变单栏，计时器与正文居中。
 aside: false
+# 这一页不显示评论区。
+# 判据同样是 page.comments !== false（主题 layout/page.pug），只影响本页。
+comments: false
 ---
 
 <div class="about-timer" id="about-timer">
