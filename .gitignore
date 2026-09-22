@@ -1,0 +1,12 @@
+.DS_Store
+Thumbs.db
+db.json
+*.log
+node_modules/
+public/
+.deploy*/
+_multiconfig.yml
+
+# 素材原件（不进构建，也不该进仓库）
+# 塔菲头像的原始 GIF 有 3.9 MB，只是转换用的素材，构建完全用不到
+_assets/

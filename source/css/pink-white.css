@@ -1,0 +1,305 @@
+/* ============================================================================
+   粉白主题 — AsiaHD's blog
+   ----------------------------------------------------------------------------
+   由 _config.butterfly.yml 的 inject.head 注入，不改动主题源码。
+   这样将来 themes/butterfly 执行 git pull 升级时，本文件不会被覆盖。
+
+   色板（色相统一在 316° 品红粉，取自 #FFB3EB）
+     #FFB3EB  316°  首屏底色（浅）——由占位符色指定
+     #661A52  321°  首屏文字（深），对 #FFB3EB 为 7.03:1
+     #AF1D88  316°  强调色：按钮、链接（白字 6.26:1，白底作正文 6.26:1）
+     #8C1468  316°  悬停加深（白字 8.70:1）
+     #FBD4EE  316°  分割线、边框、滚动条
+     #FDEFF8  316°  腮红填充面：侧栏、标签页
+     #FFFAFC  316°  纸面：暖调粉白，替掉冷调的纯 #fff
+     #3A2A31        正文，暖李子褐（白底 13.5:1）
+
+   关于首屏：底色是浅色 #FFB3EB，因此首屏文字必须用深色。
+   白字在 #FFB3EB 上只有 1.63:1，完全不可读——这是本次改色的主要约束。
+
+   为什么用 html:not([data-theme='dark']) 而不是 :root：
+     Butterfly 的暗色模式定义在 [data-theme='dark'] 上，特异性 (0,1,0) 与
+     :root 完全相同。本文件在 </head> 前最后加载，若裸写 :root 会把暗色模式
+     一并染成浅色。加一层 :not() 后特异性升到 (0,1,1)，只在浅色模式生效。
+
+   导航栏的状态处理：
+     主题的 #nav a 基础规则是「在首屏上显示浅色」，滚动后由
+     #page-header.nav-fixed #nav a 接管为深色。我的覆盖特异性 (1,1,2)
+     高于基础规则 (1,0,1)、低于 nav-fixed 规则 (2,1,1)，
+     因此只翻转首屏状态，滚动后的白底导航条不受影响。
+   ============================================================================ */
+
+/* ---------------------------------------------------------------------------
+   1. 纸面与容器 — 粉白的"白"用暖调，不用纯白
+   --------------------------------------------------------------------------- */
+html:not([data-theme='dark']) {
+  --global-bg: #FFFAFC;              /* 页面底色：暖粉白 */
+  --card-bg: #FFFFFF;                /* 卡片保持纯白，从底色上浮起来 */
+  --sidebar-bg: #FDEFF8;             /* 侧栏：腮红 */
+  --sidebar-menu-bg: #FFFFFF;
+  --search-bg: #FFF7FC;
+  --reward-pop: #FDEFF8;
+  --zoom-bg: #FFFAFC;
+  --light-grey: #F8E2F3;
+  --dark-grey: #DDC0D6;
+}
+
+/* ---------------------------------------------------------------------------
+   2. 文字 — 暖李子褐，替掉主题默认的冷蓝灰
+   --------------------------------------------------------------------------- */
+html:not([data-theme='dark']) {
+  --font-color: #3A2A31;             /* 正文 13.5:1 */
+  --text-highlight-color: #3A2A31;   /* 标题 */
+  --card-meta: #8A6E78;              /* 日期/分类等元信息 4.58:1 */
+  --toc-link-color: #6B5560;
+  --blockquote-color: #6B5560;
+  --tab-button-color: #3A2A31;
+  --tab-button-bg: #FDEFF8;
+  --tab-button-hover-bg: #F8DCF0;
+  --tab-button-active-bg: #FFFFFF;
+  --tab-border-color: #FBD4EE;
+  --search-input-color: #3A2A31;
+  --search-a-color: #3A2A31;
+  --headline-presudo: #E8CBE0;       /* 标题前的小图标 */
+}
+
+/* ---------------------------------------------------------------------------
+   3. 品红粉主色 — 承载文字的一律用深色，保证对比度
+   --------------------------------------------------------------------------- */
+html:not([data-theme='dark']) {
+  --btn-bg: #AF1D88;                 /* 按钮底色，白字 6.26:1 */
+  --btn-color: #FFFFFF;
+  --btn-hover-color: #8C1468;        /* 悬停加深，白字 8.70:1 */
+  --pseudo-hover: #8C1468;
+  --text-bg-hover: rgba(255, 179, 235, .60);   /* 文字选中高亮 */
+  --scrollbar-color: #FBD4EE;
+  --hr-border: #FBD4EE;
+  --hr-before-color: #F2BEE4;
+  --blockquote-bg: rgba(175, 29, 136, .06);
+  --default-bg-color: #AF1D88;
+  --mark-bg: rgba(255, 250, 252, .12);  /* 首屏遮罩：浅色，因为首屏底色是浅的 */
+  --card-box-shadow: 0 3px 8px 6px rgba(175, 29, 136, .06);
+  --card-hover-box-shadow: 0 3px 8px 6px rgba(175, 29, 136, .11);
+  --tags-pink-color: #AF1D88;
+  --tags-pink-color-lighten: #FDEFF8;
+}
+
+/* ---------------------------------------------------------------------------
+   4. 首屏 hero
+   当前 index_img / default_top_img 均为空，主题默认给 #page-header 一块纯色
+   （原来是 #49b1f5 亮蓝）。
+
+   因为底色变浅，下面这几组文字颜色必须同时翻转为深色。
+
+   ── 渐变（第三轮：恢复浅色） ─────────────────────────────────────────────
+   第二轮我把底部改成了 #E8739B（饱和玫红），想靠"深底"把波浪衬托得明显 ——
+   但那是**动用了配色**，而且路走错了：
+
+     参考站的波浪之所以跳，是因为它压在**深色图片**上（白 vs 近黑）。
+     本站 hero 是浅粉，浅色对浅色，对比度天花板就是 1.58:1。
+     想用"加深 hero"去追那个效果，等于拿配色换对比度 —— 不值。
+
+   现在全部收回浅色域：近白粉 → 浅粉 → 浅粉
+     #FFF0FA（近白粉）→ #FFD9F3 → #FFB3EB
+   三段都在既有浅色轴内，色域拉满（因此仍有渐变感），
+   底部固定在 #FFB3EB —— 这是**能支撑波浪的最浅颜色**，再浅就没有波浪可言了。
+
+   ⚠️ 同时必须覆盖 background-attachment。
+      主题给 #page-header.full_page 设了 background-attachment: fixed，
+      而 fixed 会让背景按「视口」而不是「元素」铺设 —— 实测截图反推，
+      渐变实际跨度约 1619px，而 hero 只有 671px，所以底部落在渐变的约 62%
+      处，颜色完全不可预测。
+      改成 scroll + background-size: 100% 100% 后，渐变才严格映射到元素高度。
+   --------------------------------------------------------------------------- */
+html:not([data-theme='dark']) #page-header {
+  background-color: #FFB3EB;
+  background-image: linear-gradient(180deg, #FFF0FA 0%, #FFD9F3 45%, #FFB3EB 100%);
+}
+
+/* 特异性 (1,1,1) > 主题 #page-header.full_page 的 (1,1,0)，无需 !important */
+html:not([data-theme='dark']) #page-header.full_page {
+  background-attachment: scroll;
+  background-size: 100% 100%;
+}
+
+/* 站点大标题：主题原为 var(--white)，在浅底上不可读 */
+html:not([data-theme='dark']) #site-title,
+html:not([data-theme='dark']) #site-subtitle,
+html:not([data-theme='dark']) #site_social_icons .social-icon,
+html:not([data-theme='dark']) #scroll-down .scroll-down-effects {
+  color: #661A52;
+  text-shadow: none;                 /* 浅底上的深色投影会显脏 */
+}
+
+/* 首屏状态的导航栏文字
+   特异性 (1,1,2) 只压过基础规则，滚动后的 #page-header.nav-fixed #nav a
+   (2,1,1) 仍然胜出，白底导航条不受影响。 */
+html:not([data-theme='dark']) #nav #blog-info,
+html:not([data-theme='dark']) #nav a,
+html:not([data-theme='dark']) #nav span.site-page,
+html:not([data-theme='dark']) #nav .site-name,
+html:not([data-theme='dark']) #nav #toggle-menu {
+  color: #661A52;
+  text-shadow: none;
+}
+html:not([data-theme='dark']) #nav a:hover,
+html:not([data-theme='dark']) #nav span.site-page:hover,
+html:not([data-theme='dark']) #nav #toggle-menu:hover {
+  color: #AF1D88;
+}
+
+/* ---------------------------------------------------------------------------
+   5. 硬编码颜色
+   var.styl 里 $a-link-color、$light-grey 等是写死的字面值，编译后不经过
+   CSS 变量，只能用选择器覆盖。以下特异性均高于主题原规则。
+   --------------------------------------------------------------------------- */
+
+/* 正文链接：主题默认 #99a9bf，白底上只有 2.6:1，本来就偏低 */
+html:not([data-theme='dark']) a,
+html:not([data-theme='dark']) .read-mode .container a,
+html:not([data-theme='dark']) .container .tabs > .tab-to-top button {
+  color: #AF1D88;
+}
+
+/* 折叠框按钮 */
+html:not([data-theme='dark']) .toggle > .toggle-button {
+  color: #3A2A31;
+}
+
+/* 阅读模式：底色与正文色 */
+html:not([data-theme='dark']) .read-mode {
+  background-color: #FFFAFC;
+  color: #3A2A31;
+}
+
+/* 评论区切换按钮
+   这三个色在 var.styl 里走的是 $bright-blue / $light-orange，不经过 CSS 变量。
+   原主题用「蓝 / 橙」区分两个评论系统，这里改成「品红粉 / 暖灰」保持可区分，
+   避免橙色破坏整体色调。 */
+html:not([data-theme='dark']) #post-comment .comment-head .comment-switch {
+  background: #FDEFF8;
+}
+html:not([data-theme='dark']) #post-comment .comment-head .comment-switch .first-comment {
+  color: #AF1D88;
+}
+html:not([data-theme='dark']) #post-comment .comment-head .comment-switch .second-comment {
+  color: #8A6E78;
+}
+html:not([data-theme='dark']) #post-comment .comment-head .comment-switch #switch-btn {
+  background-color: #AF1D88;
+}
+
+/* ---------------------------------------------------------------------------
+   6. 大块深色面 → 浅色 #FFB3EB
+   页脚、右下角悬浮按钮、侧栏「Follow Me」按钮原本都是主色 #AF1D88 实底，
+   配上白色文字/图标。改成浅色后白字只有 1.63:1，所以文字与图标必须同步
+   翻成深色 #661A52（对 #FFB3EB 为 7.03:1）。
+
+   注意：这里只改这三处具体的面，没有动 --btn-bg（分页等小控件仍用主色，
+   因为它们的白字需要足够的对比度）。
+   --------------------------------------------------------------------------- */
+
+/* 页脚 */
+html:not([data-theme='dark']) #footer {
+  /* 与页面同底色：页脚不再是一块色块，而是内容的自然延续 */
+  background-color: #FFFAFC;
+  background-image: none;
+  /* 分割线：与卡片边框同色同粗细（2px #FBD4EE），保持同一套视觉语言。
+     对页面底色 #FFFAFC 是 1.28:1 —— 它属于「结构线」而不是「装饰线」，
+     靠 2px 的粗细和整幅通宽来读，不靠对比度。 */
+  border-top: 2px solid #FBD4EE;
+}
+html:not([data-theme='dark']) #footer > * {
+  color: #661A52;
+}
+html:not([data-theme='dark']) #footer a {
+  color: #8C1468;                    /* 对 #FFB3EB 为 5.34:1，与正文文字区分开 */
+}
+html:not([data-theme='dark']) #footer a:hover {
+  color: #661A52;
+}
+
+/* 右下角悬浮按钮（设置、返回顶部等） */
+html:not([data-theme='dark']) #rightside > div > button,
+html:not([data-theme='dark']) #rightside > div > a {
+  background-color: #FFB3EB;
+  color: #661A52;
+}
+html:not([data-theme='dark']) #rightside > div > button:hover,
+html:not([data-theme='dark']) #rightside > div > a:hover {
+  background-color: #F79FDD;         /* 悬停略微加深，而不是跳到主色深玫 */
+  color: #661A52;
+}
+
+/* 侧栏作者卡的「Follow Me」按钮 */
+html:not([data-theme='dark']) #aside-content .card-info #card-info-btn {
+  background-color: #FFB3EB;
+  color: #661A52;
+}
+html:not([data-theme='dark']) #aside-content .card-info #card-info-btn:hover {
+  background-color: #F79FDD;
+  color: #661A52;
+}
+
+/* ---------------------------------------------------------------------------
+   7. 文章页页头里的标题与元信息
+   主题给这两处的默认色是白色系（var(--white) / var(--light-grey)），
+   因为它们是设计成压在 banner 大图上的。但本站没有配 banner 图：
+
+     index.pug:25  if top_img !== false
+     index.pug:27  headerClassName = ... globalPageType === 'post' ? 'post-bg' : ...
+
+   default_top_img 为空时 top_img 是 undefined，而 undefined !== false 成立，
+   于是文章页照样拿到一个全尺寸页头（class="post-bg"），却没有背景图，
+   露出了上面第 4 节设的浅粉渐变 —— 白字压浅底，只有 1.6:1。
+
+   归档页的 <h1 id="site-title"> 已被第 4 节覆盖；这里补的是文章页独有的
+   #post-info .post-title 与 #post-meta。
+
+   :not([style]) 表示「该页头没有内联 background-image」，即没有配 banner 图。
+   将来若给文章配了 top_img，页头会带上内联 style，这两条规则自动失效，
+   白字恢复，不会出现深色字压在照片上看不清的情况。
+   --------------------------------------------------------------------------- */
+html:not([data-theme='dark']) #page-header:not([style]) #post-info .post-title {
+  color: #661A52;                    /* 对 #FFB3EB 为 7.03:1，对近白端 10.9:1 */
+  text-shadow: none;
+}
+html:not([data-theme='dark']) #page-header:not([style]) #post-info #post-meta,
+html:not([data-theme='dark']) #page-header:not([style]) #post-info #post-meta a {
+  color: #8C1468;                    /* 元信息略浅一级做层次，最差 5.34:1 */
+}
+html:not([data-theme='dark']) #page-header:not([style]) #post-info #post-meta a:hover {
+  color: #661A52;                    /* 主题原有的下划线保留 */
+}
+
+/* ---------------------------------------------------------------------------
+   8. 关闭头像的「悬停转一圈」
+   ---------------------------------------------------------------------------
+   这一条不是配色规则，放在本文件是因为它已经承担「对主题外观做自定义」
+   的职责，不想再为此单独开一个 CSS 文件。
+
+   ⚠️ 主题里其实有「两个转」，非常容易搞混：
+
+     ① 持续无休止地转 —— function.styl:177
+          if hexo-config('avatar.effect') == true
+            .avatar-img
+              animation: avatar_turn_around 2s linear infinite
+        这个**受配置控制**，本站的 avatar.effect 已是 false，本来就是关的。
+
+     ② 鼠标悬停时转一圈 —— aside.styl:346
+          .avatar-img img
+            transition: filter 375ms ease-in .2s, transform .3s
+            &:hover
+              transform: rotate(360deg)
+        这个**主题没有提供任何配置开关**，硬编码在样式里。
+        下面覆盖掉的就是它。
+
+   不需要 !important：
+     主题选择器 .avatar-img img:hover → 特异性 (0, 2, 1)
+     下面同选择器 → (0, 2, 1)
+     打成平手时后加载的胜出，而本文件在 index.css 之后加载（inject.head 注入）。
+   --------------------------------------------------------------------------- */
+.avatar-img img:hover {
+  transform: none;
+}
+

@@ -1,0 +1,83 @@
+# ============================================================================
+# 部署 Hexo 到 GitHub Pages —— GitHub Actions 路线
+# ----------------------------------------------------------------------------
+# 工作方式：
+#   你 push 源码到 main 分支
+#     → 这个 workflow 在 GitHub 的机器上 npm ci + hexo generate
+#     → 把 public/ 作为产物发布到 Pages
+#
+# 为什么用「产物发布」而不是推 gh-pages 分支：
+#   · 不需要你本地构建，换电脑也能更新
+#   · 源码有版本历史，改坏了可以回滚
+#   · 不需要 hexo-deployer-git
+#   · 因为是产物直传，**不会经过 Jekyll**，所以不需要在根目录放 .nojekyll
+#     （那个文件只在"从分支发布"模式下才需要，用来防止 Jekyll 吃掉 _ 开头的目录）
+#
+# ⚠️ 仓库设置里要做一步：
+#     Settings → Pages → Build and deployment → Source 选 **GitHub Actions**
+#     选成 "Deploy from a branch" 的话这个 workflow 跑完也不会生效。
+#
+# ⚠️ 前置条件（已核实）：package-lock.json 存在（lockfileVersion 3），
+#     所以 npm ci 可用。缺 lockfile 的话 npm ci 会直接失败。
+# ============================================================================
+
+name: 部署到 GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # 允许在 Actions 页面手动点一下重跑，方便改完 Pages 设置后重新发布
+  workflow_dispatch:
+
+# GITHUB_TOKEN 的最小权限：读源码、写 Pages、拿 OIDC 令牌
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同时只跑一个部署；不取消进行中的那次，避免把半截产物推上线
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 取出源码
+        uses: actions/checkout@v4
+        # ⚠️ 如果最终决定把主题做成 git submodule，
+        #    这里必须加 with: submodules: true，否则主题目录是空的、构建出来没有样式。
+
+      - name: 配置 Pages
+        uses: actions/configure-pages@v5
+
+      - name: 准备 Node
+        uses: actions/setup-node@v4
+        with:
+          # Node 20 (LTS) 自带 npm 10，能正确读取 lockfileVersion 3。
+          # 本机是 Node 24，生成出来的 lockfile 在 npm 10 下同样可用。
+          node-version: '20'
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 构建
+        run: npm run build
+
+      - name: 上传产物
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 发布到 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

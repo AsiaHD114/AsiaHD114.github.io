@@ -1,0 +1,35 @@
+/* ============================================================================
+   全局字体 —— Smiley Sans / 得意黑
+   ----------------------------------------------------------------------------
+   字体   得意黑 Smiley Sans Oblique
+   作者   atelierAnchor 锚坞
+   授权   SIL Open Font License 1.1   https://scripts.sil.org/OFL
+          可免费商用；OFL 要求保留版权声明，故本注释不可删除。
+   来源   官方仓库 https://github.com/atelier-anchor/smiley-sans
+          文件取自 npm 官方包 @fontpkg/smiley-sans@2.0.4 内的
+          SmileySans-Oblique.ttf.woff2
+          1123.9 KB  SHA256 731F22973349404B15A88A99EF3B5DD4104C0965C23B7E485C1F11E84FEA99E2
+
+   ⚠️ 三个 descriptor 必须写对，否则会出问题：
+     ① font-weight: 100 900
+        这个字体**只有一个字重**。不声明范围的话，font-weight:700/800
+        会去找并不存在的粗体，各浏览器回退行为不一致。声明成范围后，
+        所有字重都落在这一份字形上，粗体由浏览器**合成加粗** ——
+        参考站用的也是这一个字重的字体，所以它那个粗数字同样是合成加粗。
+     ② font-style: normal
+        字形**本身设计就是斜的**（Oblique 是它的设计，不是样式）。
+        若声明成 italic，浏览器会对斜体文本再斜一次，变成双重倾斜。
+     ③ font-display: swap
+        字体 1.1 MB。不写 swap 的话，字体下完之前整页文字是**隐形的**
+        （FOIT）。写了 swap 则先用系统字体显示，下完再替换。
+        （/ui-ux-pro-max 的 Font Loading 条目：Do use font-display swap，
+         Don't 让文字在加载期间不可见。）
+   ============================================================================ */
+
+@font-face {
+  font-family: 'Smiley Sans Oblique';
+  src: url('/fonts/SmileySans-Oblique.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}

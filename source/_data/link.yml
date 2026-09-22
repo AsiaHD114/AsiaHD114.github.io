@@ -1,0 +1,76 @@
+# 友情链接数据
+# ---------------------------------------------------------------------------
+# 这个文件被 Butterfly 的友链页（source/link/index.md，type: link）读取，
+# 在服务端直接渲染成卡片，不需要额外配置。
+#
+# 写法：
+#   - class_name: 分组名        （可选，会渲染成一个小标题）
+#     class_desc: 分组描述      （可选）
+#     link_list:
+#       - name:   站点名
+#         link:   站点地址
+#         avatar: 头像地址      （留空或加载失败时回退到 /img/friend_404.gif）
+#         descr:  一句话简介
+#
+# 关于头像回退：主题 flink.pug 里有
+#   onerror='this.onerror=null;this.src="/img/friend_404.gif"'
+# 所以 avatar 写错或留空只会显示占位图，不会出现破图。
+# ---------------------------------------------------------------------------
+
+- class_name: 生活分享喵
+  class_desc: 分享点点滴滴
+  link_list:
+    - name: 哔哩哔哩
+      link: https://www.bilibili.com/
+      avatar: /img/bilibili.webp
+      descr: 弹幕视频网站
+
+    - name: 永雏塔菲
+      link: https://space.bilibili.com/1265680561
+      avatar: /img/taffy.webp
+      descr: 灌注塔菲谢谢喵
+
+    - name: 奇比chippy
+      link: https://space.bilibili.com/3632304677193739
+      avatar: /img/chippy.webp
+      descr: 可愛いですね
+
+    - name: YouTube
+      link: https://www.youtube.com/
+      avatar: /img/youtube.webp
+      descr: 视频分享平台
+
+# ---------------------------------------------------------------------------
+# 第二个板块（占位，等着填）
+#
+# 把 class_name / class_desc 填上，标题和描述就会自动出现。
+#
+# ⚠️ link_list 必须写成 []（显式空数组），**不能留空**。
+#    留空在 YAML 里是 null，而主题模板是 `each j in i.link_list`，
+#    迭代 null 会抛异常 —— 后果不只是这个空板块不显示，
+#    而是**整个友链列表全部渲染不出来**（实测卡片数直接变 0）。
+#    更麻烦的是 hexo generate 仍然报成功，属于静默丢内容。
+#
+# 填内容时照抄上面任意一条的形状即可：
+#     - name: 站点名
+#       link: 站点地址
+#       avatar: 头像地址
+#       descr: 一句话简介
+# ---------------------------------------------------------------------------
+- class_name: 工作学习喵
+  class_desc: up!
+  link_list:
+    - name: GitHub
+      link: https://github.com/
+      avatar: /img/github.webp
+      descr: 代码托管平台
+
+    - name: DeepSeek
+      link: https://www.deepseek.com/
+      avatar: /img/deepseek.webp
+      descr: 人工智能公司
+
+    - name: Butterfly
+      link: https://butterfly.js.org/
+      avatar: https://butterfly.js.org/img/avatar.png
+      descr: 本博客所用主题的官方站点

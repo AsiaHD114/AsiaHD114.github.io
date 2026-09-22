@@ -1,0 +1,121 @@
+# Hexo 站点配置
+## 官方文档：https://hexo.io/docs/configuration.html
+## 源码仓库：https://github.com/hexojs/hexo/
+
+# 站点信息
+title: AsiaHD's blog
+subtitle: ""
+description: ""
+keywords:
+author: AsiaHD
+language: zh-CN
+timezone: ""
+
+# 网址
+## 仓库是 AsiaHD114/AsiaHD114.github.io —— 这是「用户站」（仓库名 = 用户名.github.io），
+## 服务在根路径 https://AsiaHD114.github.io/，所以 root 是 '/'。
+## ⚠️ 如果以后换成「项目站」（仓库名不是 用户名.github.io，比如叫 blog），
+##    服务路径会变成 /blog/，那时必须：
+##      url:  https://AsiaHD114.github.io/blog
+##      root: /blog/
+##    漏改 root 的话全站 CSS/JS/图片都会 404，页面裸奔 —— 这是 GitHub Pages 最经典的翻车方式。
+url: https://AsiaHD114.github.io
+root: /
+permalink: :year/:month/:day/:title/
+permalink_defaults:
+pretty_urls:
+  trailing_index: true # 设为 false 可去掉固定链接末尾的 'index.html'
+  trailing_html: true # 设为 false 可去掉固定链接末尾的 '.html'
+
+# 目录
+source_dir: source
+public_dir: public
+tag_dir: tags
+archive_dir: archives
+category_dir: categories
+code_dir: downloads/code
+i18n_dir: :lang
+skip_render:
+
+# 写作
+new_post_name: :title.md # 新建文章的默认文件名
+default_layout: post
+titlecase: false # 是否把标题转换成 Title Case（首字母大写）
+external_link:
+  enable: true # 是否让外部链接在新标签页打开
+  field: site # 作用范围：整站
+  exclude: ""
+filename_case: 0
+render_drafts: false
+post_asset_folder: false
+relative_link: false
+future: true
+syntax_highlighter: highlight.js
+highlight:
+  line_number: true
+  auto_detect: false
+  tab_replace: ""
+  wrap: true
+  hljs: false
+prismjs:
+  preprocess: true
+  line_number: true
+  tab_replace: ""
+
+# 首页设置
+# path: 博客索引页的根路径（默认 ''）
+# per_page: 每页显示的文章数（设为 0 表示不分页）
+# order_by: 文章排序方式（默认按日期倒序）
+index_generator:
+  path: ""
+  per_page: 10
+  order_by: -date
+
+# 分类与标签
+default_category: uncategorized
+category_map:
+tag_map:
+
+# 元数据标签
+## https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/meta
+meta_generator: true
+
+# 日期 / 时间格式
+## Hexo 使用 Moment.js 解析和显示日期
+## 格式写法参见：
+## http://momentjs.com/docs/#/displaying/format/
+date_format: YYYY-MM-DD
+time_format: HH:mm:ss
+## updated_option 可选值：'mtime'、'date'、'empty'
+updated_option: "mtime"
+
+# 分页
+## 把 per_page 设为 0 可关闭分页
+per_page: 10
+pagination_dir: page
+
+# 包含 / 排除文件
+## include: 与 exclude: 只对 'source/' 目录生效
+include:
+exclude:
+ignore:
+
+# 扩展
+## 插件：https://hexo.io/plugins/
+## 主题：https://hexo.io/themes/
+theme: butterfly
+
+# 本地搜索索引
+## 由 hexo-generator-searchdb 生成，Butterfly 的 local_search 读取
+## 注意：这个 search 段是 Hexo 根配置，和 _config.butterfly.yml 里的 search 段是两回事，
+##       插件生成索引、主题读索引，两者通过 path 对上
+search:
+  path: search.json      # 生成的索引文件名（插件推荐 JSON，比 XML 小且无编码问题）
+  field: post            # 索引范围：post 正文
+  content: true          # 是否包含全文（false 则只索引标题等元信息）
+  format: striptags      # 索引内容格式
+
+# 部署
+## 文档：https://hexo.io/docs/one-command-deployment
+deploy:
+  type: ""

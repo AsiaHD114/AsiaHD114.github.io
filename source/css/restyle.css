@@ -1,0 +1,798 @@
+/* ============================================================================
+   第一轮视觉改造 —— 参考 moejue.cn（WordPress + LoliMeow 主题）
+   ----------------------------------------------------------------------------
+   约束（用户指定）：
+     · 配色不变 —— 只用现有色板，不引入新颜色
+     · 不加新图片 —— 不用任何背景图 / 图标资源
+     · 顶部不加新元素 —— 导航栏与首屏 hero 一律不动
+
+   从参考站提炼出的设计语言（都读了它的 CSS 才敢用）：
+     ① 硬投影      box-shadow: 2px 2px 0 0 #333        —— 偏移无模糊，漫画感
+     ② 弹簧缓动    cubic-bezier(.5, 2.5, .7, .7)       —— 明显过冲回弹
+     ③ 下划线擦入  background-size 0% → 100% (5% 高)   —— 粗下划线从左擦出
+     ④ 悬浮胶囊标题 position:absolute; top:-15px;
+                    border-radius:100px; background:#fff
+     ⑤ 标签胶囊    25px 圆角 + 1px 描边，hover 时硬投影 + 位移
+     ⑥ 圆形分页    border-radius:50%; 35×35
+
+   本文件只取 ①②③④⑤⑥，并把它们的颜色全部换成站内已有的色值：
+     硬投影/描边  → #AF1D88（主题主色，原本就存在）
+     hover 底色   → #FDEFF8（腮红，原本就存在）
+   所以「配色不变」这条是成立的。
+
+   加载顺序：本文件在 index.css 之后注入（inject.head），
+   因此同特异性时后者胜出 —— 下面多数规则不需要 !important，
+   只有少数低于主题特异性的地方才用。
+   ============================================================================ */
+
+/* ---------------------------------------------------------------------------
+   统一缓动：弹簧曲线
+   参考站几乎每个交互都用 cubic-bezier(.5,2.5,.7,.7)，这是它"手感"的来源。
+   --------------------------------------------------------------------------- */
+#recent-posts .recent-post-item,
+#recent-posts .recent-post-item > .recent-post-info > .article-title,
+#aside-content .card-widget,
+#aside-content .card-tag-cloud a,
+#pagination .page-number {
+  transition: all .3s cubic-bezier(.5, 2.5, .7, .7);
+}
+
+/* ---------------------------------------------------------------------------
+   ① 首页文章卡片：描边 + 硬投影 + 悬浮上移
+   主题原本靠 --card-box-shadow 那种大范围柔和阴影，这里换成"描边 + 硬投影"，
+   和参考站的 .blog-border 是同一个思路，但只用站内色。
+   --------------------------------------------------------------------------- */
+#recent-posts .recent-post-item {
+  border: 2px solid #FBD4EE;          /* 柔粉描边，替代主题的纯阴影 */
+  border-radius: 12px;
+  background-color: #FFFFFF;
+  box-shadow: none;
+}
+
+#recent-posts .recent-post-item:hover {
+  border-color: #F79FDD;
+  box-shadow: 4px 4px 0 0 #F79FDD;    /* ← 硬投影：偏移、零模糊 */
+  transform: translate(-2px, -2px);   /* 配合投影方向一起抬起来 */
+}
+
+/* 卡片内容区：加大留白，参考站的呼吸感明显比主题默认更足 */
+#recent-posts .recent-post-item > .recent-post-info {
+  padding: 28px 32px;
+}
+
+/* 摘要在无封面时更该被读，主题只给 2 行（-webkit-line-clamp: 2），放到 3 行 */
+#recent-posts .recent-post-item > .recent-post-info > .content {
+  -webkit-line-clamp: 3;
+  line-height: 1.75;
+}
+
+/* ---------------------------------------------------------------------------
+   ③ 文章标题：hover 时粗下划线从左擦入
+   参考站的原写法（.post-list .post-title a）：
+     background-image: linear-gradient(...);
+     background-size: 0% 5%; background-position: left 80%;
+     hover → background-size: 100% 5%
+   这里照搬结构，颜色换成主色。
+   注意 background-position 的 80% 是为了让线落在文字基线下方一点点。
+   --------------------------------------------------------------------------- */
+#recent-posts .recent-post-item > .recent-post-info > .article-title {
+  /* ⚠️ 关键修复：下划线是 background 实现的，而本元素被主题设为
+     display: -webkit-box（块级，为了行数截断），块级背景会铺满整个容器宽度，
+     导致下划线横穿到卡片右边、与文字完全对不上。
+     width: fit-content 让盒子收缩到文字宽度，下划线随之只跟文字等宽。
+     保留 -webkit-box 是为了不破坏主题原有的两行截断。 */
+  width: fit-content;
+  max-width: 100%;
+  background-image: linear-gradient(to right, #AF1D88, #AF1D88);
+  background-size: 0% 4px;
+  background-repeat: no-repeat;
+  background-position: left 88%;
+}
+
+#recent-posts .recent-post-item > .recent-post-info > .article-title:hover {
+  background-size: 100% 4px;
+}
+
+/* 元信息行：加一条细分隔线，把"标题 / 摘要 / 元信息"三段分开 */
+#recent-posts .recent-post-item > .recent-post-info > .article-meta-wrap {
+  padding-bottom: 10px;
+  border-bottom: 1px dashed #FBD4EE;
+}
+
+/* ---------------------------------------------------------------------------
+   ④ 侧栏卡片：悬浮胶囊标题
+   这是参考站最好认的一个特征 —— 小组件标题是一枚压在卡片上边缘的胶囊。
+
+   ⚠️ 主题给 #aside-content .card-widget 设了 overflow: hidden，
+      胶囊要探出卡片外，必须放开；否则会被裁掉（这是本次最容易踩的坑）。
+
+   胶囊用绝对定位后会脱离文档流，所以卡片要补 padding-top，
+   否则正文会顶到卡片上沿。
+   --------------------------------------------------------------------------- */
+#aside-content .card-widget {
+  overflow: visible;
+  padding-top: 34px;
+  border: 2px solid #FBD4EE;
+  border-radius: 12px;
+  background-color: #FFFFFF;
+  box-shadow: none;
+}
+
+#aside-content .card-widget:hover {
+  border-color: #F79FDD;
+  box-shadow: 4px 4px 0 0 #F79FDD;
+  transform: translate(-2px, -2px);
+}
+
+#aside-content .item-headline {
+  position: absolute;
+  left: 20px;
+  top: -14px;
+  z-index: 2;
+  margin: 0;
+  padding: 4px 16px 4px 14px;
+  background-color: #FFFAFC;          /* 纸面色，和页面底一致才能"压"在边上 */
+  border: 1.5px solid #AF1D88;
+  border-radius: 100px;
+  font-size: .9em;
+  line-height: 1.6;
+}
+
+/* 作者卡没有 .item-headline（用的是 .author-info-name），
+   它不需要为胶囊留出顶部空间，还原成原本的内边距 */
+#aside-content .card-info {
+  padding-top: 20px;
+}
+
+/* ---------------------------------------------------------------------------
+   ⑤ 标签云胶囊
+   注意：本站目前文章数为 1 且没有标签，所以这张卡片不会渲染，
+   这条规则现在看不到效果，等有标签后自然生效。
+   特异性 (1,2,1) 与主题的 #aside-content .card-tag-cloud a 相同，
+   本文件靠后加载取胜，无需 !important。
+   --------------------------------------------------------------------------- */
+#aside-content .card-tag-cloud a {
+  display: inline-block;
+  margin: 0 6px 10px 0;
+  padding: 4px 12px;
+  line-height: 1.5;
+  border: 1px solid #FBD4EE;
+  border-radius: 25px;                /* 参考站用的是 25px 全胶囊 */
+  background-color: #FFFFFF;
+}
+
+#aside-content .card-tag-cloud a:hover {
+  border-color: #F79FDD;
+  box-shadow: 2px 2px 0 0 #F79FDD;
+  transform: translate(-1px, -1px);
+}
+
+/* ---------------------------------------------------------------------------
+   ⑥ 分页：改成圆形
+   同样地，本站只有 1 篇文章、还没有第 2 页，所以暂时看不到效果。
+   --------------------------------------------------------------------------- */
+#pagination .page-number {
+  display: inline-block;
+  min-width: 36px;
+  height: 36px;
+  line-height: 34px;
+  padding: 0;
+  margin: 0 5px;
+  border: 1.5px solid #FBD4EE;
+  border-radius: 50%;
+  background-color: #FFFFFF;
+}
+
+#pagination .page-number:hover {
+  border-color: #F79FDD;
+  box-shadow: 2px 2px 0 0 #F79FDD;
+  transform: translate(-1px, -1px);
+}
+
+/* 当前页保持实心主色，但同样收成圆形 */
+#pagination .page-number.current {
+  border-color: #AF1D88;
+  border-radius: 50%;
+  background-color: #AF1D88;
+}
+
+/* ---------------------------------------------------------------------------
+   ⑦ 无障碍底线（不是装饰，是必须的）
+   硬投影改变了卡片轮廓，焦点样式必须仍然可见。
+   主题本身没去掉 outline，这里只是把它统一成主色、并保证键盘可见。
+   --------------------------------------------------------------------------- */
+#recent-posts .recent-post-item > .recent-post-info > .article-title:focus-visible,
+#aside-content .card-tag-cloud a:focus-visible,
+#pagination .page-number:focus-visible {
+  outline: 2px solid #AF1D88;
+  outline-offset: 2px;
+}
+
+/* 尊重系统「减少动效」：去掉位移与缓动，只保留颜色变化 */
+@media (prefers-reduced-motion: reduce) {
+  #recent-posts .recent-post-item,
+  #aside-content .card-widget,
+  #aside-content .card-tag-cloud a,
+  #pagination .page-number {
+    transition: none;
+  }
+  #recent-posts .recent-post-item:hover,
+  #aside-content .card-widget:hover,
+  #aside-content .card-tag-cloud a:hover,
+  #pagination .page-number:hover {
+    transform: none;
+  }
+  #recent-posts .recent-post-item > .recent-post-info > .article-title {
+    transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   ⑧ 页脚波浪 —— 已移除
+   原实现是一条 44px 高的 SVG 波浪贴在页脚上沿（与页脚同色 #FFB3EB）。
+   后来页脚改成与页面同底色，波浪失去存在意义，因此整段删除：
+     · #footer::before 的波浪规则
+     · @keyframes footer-wave-drift
+     · 对应的 prefers-reduced-motion 降级
+   页脚现在的形态见 pink-white.css 第 6 节：页面底色 + 一条 2px 分割线。
+   注意：首屏波浪（⑨）是独立的一套，未受影响。
+   --------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------
+   ⑨ 首屏底部的波浪（页脚那条的放大版）
+   ----------------------------------------------------------------------------
+   与 ⑧ 同一套做法，但有两处关键差别：
+
+   ① 尺寸更大 —— 高 90px、波长仍是 1200px。
+      同样波长下把高度从 44 提到 90，波形会"变胖"，视觉分量明显大于页脚那条。
+      这条是主角，页脚那条保持 44px 收着，形成主次。
+
+   ② 只作用于首页 hero —— 选择器限定 .full_page。
+      文章页的页头是 .post-bg（400px），给它也加波浪会喧宾夺主；
+      归档页是 .not-home-page，同理不加。
+
+   颜色必须与 hero 底色一致（都是 #FFB3EB），否则接缝处会露出一道色阶。
+   pink-white.css 第 4 节已经把 hero 渐变底部固定为 #FFB3EB，所以这里能严丝合缝。
+
+   ⚠️ 两个必须处理的坑：
+     · #page-header::before 已被主题的遮罩占用
+       （#page-header:not(.not-top-img):before { background-color: var(--mark-bg) }），
+       所以只能用 ::after。已核实 #page-header::after 全站 0 条规则，是空的。
+     · 波浪是 position:absolute + top:100%，脱离文档流，
+       会盖住紧随其后的 <main id="content-inner">。
+       所以给 header 补 margin-bottom: 64px 让出位置 —— 与 ⑧ 靠"页脚外侧"
+       不同，这里必须显式占位。
+
+   动画位移必须正好等于波长（1200px），否则每轮循环会跳。
+   ---------------------------------------------------------------------------
+
+   ── 第四轮：改成 4 层半透明（对齐参考站） ──────────────────────────────
+   参考站是 4 层 <use>，同为白色但透明度/速度/负延迟各不相同：
+     rgba(255,255,255,.3) / rgb(255 255 255 / 95%) / .3 / #fff
+     7s / 10s / 13s / 20s，delay -2s / -3s / -4s / -5s
+
+   ⚠️ 关键差异：参考站是**白色压在深色图上**，本站是浅色主题。
+      直接照搬白色层在浅粉上是看不见的。所以反过来做：
+      **半透明粉色（#FFB3EB + fill-opacity）压在白色页面上**，
+      叠加处自然变深 —— 同样是"多层半透明"，只是明暗关系相反。
+
+   ── 第五轮：改用真实元素，4 层各自的速度与方向 ──────────────────────────
+   上一版把 4 层塞进 ::before / ::after 两个伪元素（每个 2 个背景层）。
+   那样**只有 2 种速度** —— 因为 CSS 里同一个元素的多个背景层只能共享
+   一段 animation，没有语法能给每个背景层单独设速度；伪元素又只有两个。
+
+   所以改成：由 source/js/hero-waves.js 往 #page-header 里注入
+   .hero-waves 容器 + 4 个 <i>，每层一个元素、一段独立的动画。
+
+   两个额外好处：
+     · 能左右方向交错（多背景层共享动画时做不到反向）
+     · 用 transform 动画走 GPU 合成，替代上一版每帧重绘的 background-position
+
+   4 层参数（速度 / 方向 / 透明度 / 波长 全不同）：
+     层1  600px  向右  38s  0.20   ← 最淡、最低
+     层2 1200px  向左  62s  0.35   ← 反向相位、振幅最大
+     层3  900px  向右  44s  0.55
+     层4 1200px  向左  30s  1.0    ← 实色主浪，与 hero 底部无缝相接
+   相邻层方向都相反，所以会互相穿插；速度差让它们持续错开又重合。
+
+   循环无缝的前提（已逐层验算）：
+     每层的位移量**恰好等于它自己的波长**（600 / 1200 / 900 / 1200），
+     所以循环点图案与起点完全重合、看不出接缝。
+     注意这与上一版不同 —— 上一版是"位移统一 1200，各层波长整除它"。
+
+   ⚠️ 容器必须 overflow:hidden：
+      层要宽于视口（左右各多留 1500px）才能在位移时不露白，
+      而超宽的绝对定位元素会撑出横向滚动条，靠容器裁掉。
+
+   ⚠️ 无障碍（ui-ux-pro-max 的 Motion Sensitivity，High 严重级）：
+      多层视差属于"强迫性动态效果"，reduced-motion 下 4 层必须全部停住，
+      但**保留静态的多层波形**（不是让它们消失）。
+      媒体查询用 .hero-waves i 一次性覆盖，以后加层不用再改。
+   --------------------------------------------------------------------------- */
+/* 所有页头都留出波浪的高度（64px = 波浪带高度）。
+   ⚠️ 这一条不能少：波浪是 position:absolute + top:100%，脱离文档流，
+      不补间距它会直接盖住紧随其后的 <main id="content-inner">。
+      已核实全站页头都带背景色（首页 .full_page / 内页 .not-home-page /
+      文章页 .post-bg），没有 .not-top-img（那个是 height:60px; background:0），
+      所以不会出现「波浪下方没底色、像悬空一块粉色」。
+   特异性说明：主题有 #page-header.not-top-img { margin-bottom: 10px }（1,1,0），
+   本规则经 html:not(...) 前缀后是 (1,2,0)，胜出。 */
+html:not([data-theme='dark']) #page-header {
+  margin-bottom: 64px;
+}
+
+/* 4 层波浪容器 —— 由 source/js/hero-waves.js 注入到 #page-header 内部。
+   层数改成 4 个**真实元素**而不是伪元素，原因见下方说明。 */
+html:not([data-theme='dark']) .hero-waves {
+  position: absolute;
+  left: 0;
+  top: calc(100% - 4px);           /* 上移 4px 压住 hero，消除小数像素接缝 */             /* 紧贴 hero 底边向下延伸 */
+  width: 100%;
+  height: 64px;
+  overflow: hidden;      /* 裁掉超宽的层，否则会撑出横向滚动条 */
+  pointer-events: none;
+  z-index: 1;
+}
+
+html:not([data-theme='dark']) .hero-waves i {
+  position: absolute;
+  top: 0;
+  /* 左右各多留 1500px：无论向左还是向右位移一个波长，都能盖满可见区。
+     这点很关键 —— 位移量不够就会在边缘露出空白。 */
+  left: -1500px;
+  width: calc(100% + 3000px);
+  height: 64px;
+  background-repeat: repeat-x;
+  will-change: transform;   /* 提示浏览器走合成层 */
+}
+
+/* ---------------------------------------------------------------------------
+   4 层参数：速度 / 方向 / 透明度 / 波长 全不相同
+   ---------------------------------------------------------------------------
+   方向左右交替（右 / 左 / 右 / 左）—— 这就是"相互交错"的来源：
+   同向的两层速度不同会拉开，反向的两层会彼此穿插。
+
+   每层的位移量都**恰好等于它自己的波长**，所以循环时图案与起点重合、不会跳。
+   注意这里不再是"位移统一取 1200 让各层整除"，而是**每层各按自己的波长位移**，
+   因为现在每层有独立的 keyframes。
+
+   层序即画序：<i>1</i> 先画（在最下面），<i>4</i> 最后画（在最上面）。
+   所以实色主浪放在第 4 个 —— 它负责与 hero 底部无缝相接。
+   --------------------------------------------------------------------------- */
+
+/* 层1：最淡、最低、最短波长，向右 */
+html:not([data-theme='dark']) .hero-waves i:nth-child(1) {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 64' preserveAspectRatio='none'><path d='M0,0 L1200,0 L1200,52 C1050,39 750,39 600,52 C450,65 150,65 0,52 Z' fill='%23FFB3EB' fill-opacity='0.30'/></svg>");
+  background-size: 600px 64px;
+  animation: hero-wave-d1 41s linear infinite;
+}
+
+html:not([data-theme='dark']) .hero-waves i:nth-child(2) {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 64' preserveAspectRatio='none'><path d='M0,0 L1200,0 L1200,43 C1050,59 750,59 600,43 C450,27 150,27 0,43 Z' fill='%23FFB3EB' fill-opacity='0.45'/></svg>");
+  background-size: 1200px 64px;
+  animation: hero-wave-d2 33s linear infinite;
+}
+
+html:not([data-theme='dark']) .hero-waves i:nth-child(3) {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 64' preserveAspectRatio='none'><path d='M0,0 L1200,0 L1200,25 C1050,2 750,2 600,25 C450,48 150,48 0,25 Z' fill='%23FFB3EB'/></svg>");
+  background-size: 1200px 64px;
+  animation: hero-wave-d3 22s linear infinite;
+}
+
+/* 位移 = 各自的波长：600 / 1200 / 900 / 1200
+   向右用正值，向左用负值 —— 方向交替，形成相互穿插 */
+
+/* Motion Sensitivity（High 严重级）：视差属强迫性动态效果，
+   reduced-motion 下 4 层全部停住，但保留静态的多层波形（不是让它们消失）。
+   注意选择器用的是 .hero-waves i，一次性覆盖全部 4 层，
+   新增层数时不需要再来改这里。 */
+
+@keyframes hero-wave-d1 { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-600px, 0, 0); } }
+@keyframes hero-wave-d2 { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-1200px, 0, 0); } }
+@keyframes hero-wave-d3 { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-1200px, 0, 0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-theme='dark']) .hero-waves i {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   ⑩ 关于笔者 —— 计时器（行内排版）
+   ----------------------------------------------------------------------------
+   视觉参考 poetize.cn/love：**不用卡片、不用方块**，直接落在页面背景上。
+   数字与单位行内混排，数字极大极粗，单位小且浅。
+
+   为什么这样更好（相对上一版「卡片 + 4 个方块」）：
+     卡片和方块把这个组件「框」成了一个独立控件，与页面割裂；
+     行内排版让它读起来像一句话 ——「第 9 年 7 月 25 日 9 时 10 分 31 秒」，
+     而不是四个数字格。这正是参考站的做法，也是「融入背景」的实现方式。
+
+   ⚠️ tabular-nums 必须保留：数字每秒变一次，不加等宽会在跳动时左右抖。
+   ⚠️ clamp() 让字号随视口缩放，所以不需要写断点媒体查询。
+   --------------------------------------------------------------------------- */
+
+/* 仅供读屏：视觉隐藏但仍可被辅助技术读取 */
+.about-timer__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 无边框、无底色 —— 这就是「融入背景」 */
+html:not([data-theme='dark']) .about-timer {
+  margin: 0 0 36px;
+  text-align: center;
+}
+
+html:not([data-theme='dark']) .about-timer__label {
+  margin: 0 0 6px;
+  font-size: clamp(15px, 2.6vw, 20px);
+  font-weight: 600;
+  letter-spacing: .06em;
+  /* 回退值：不支持 background-clip:text 的浏览器用这个实色。
+     少了这一行，下面 color:transparent 会让整行字直接消失。 */
+  color: #AF1D88;
+}
+
+/* 动态渐变文字（Kinetic Typography 的 background-clip:text 做法）。
+
+   ⚠️ 关键约束：渐变的**每一个色标**都必须 ≥4.5:1。
+      这是小字（15-20px / 600），AA 门槛是 4.5:1。
+      站内色板的对比度阶梯（对页面 #FFFAFC）：
+        #AF1D88 = 6.06   ← 小字能通过的最浅一档
+        #8C1468 = 8.42
+        #661A52 = 11.08
+        #C75FAB = 3.60   ← 只够 56px 大数字用
+        #E8739B = 2.76
+        #F79FDD = 1.86
+      所以渐变只能在 #AF1D88 → #661A52 这段深色区间内流动。
+      参考站那种「亮色扫过」的写法在本地色板下会破坏对比度，这里不照抄。 */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  html:not([data-theme='dark']) .about-timer__label {
+    background-image: linear-gradient(
+      90deg,
+      #AF1D88 0%,
+      #8C1468 25%,
+      #661A52 50%,
+      #8C1468 75%,
+      #AF1D88 100%
+    );
+    /* background-size 取 200%：配合位移 0% → 200% 正好走完一整轮。
+       首尾色标相同（都是 #AF1D88），所以循环点看不出接缝。 */
+    background-size: 200% 100%;
+    background-repeat: repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: about-label-shine 7s linear infinite;
+  }
+}
+
+@keyframes about-label-shine {
+  from { background-position: 0% 50%; }
+  to   { background-position: 200% 50%; }
+}
+
+/* Kinetic Typography 的 accessibility 字段明确列了 reduced-motion：
+   停掉流动，但**静态渐变保留**（不是退回单色）。 */
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-theme='dark']) .about-timer__label {
+    animation: none;
+    background-position: 0% 50%;
+  }
+}
+
+/* 主读数：数字与单位行内混排 */
+html:not([data-theme='dark']) .about-timer__elapsed {
+  margin: 0;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+html:not([data-theme='dark']) .about-timer__elapsed b {
+  font-size: clamp(30px, 7.2vw, 56px);
+  font-weight: 800;
+  color: #C75FAB;
+  margin: 0 2px;
+}
+
+/* 单位与「第」：小一级、浅一档，把视觉重量全让给数字 */
+html:not([data-theme='dark']) .about-timer__elapsed .about-timer__pre,
+html:not([data-theme='dark']) .about-timer__elapsed .about-timer__unit {
+  font-size: clamp(14px, 2.6vw, 21px);
+  font-weight: 500;
+  color: #8A6E78;
+  margin: 0 5px;
+}
+
+/* 倒计时：比主读数小一级，避免两行抢注意力 */
+html:not([data-theme='dark']) .about-timer__countdown {
+  margin: 10px 0 0;
+  font-size: clamp(13px, 2.3vw, 17px);
+  font-weight: 600;
+  color: #AF1D88;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* ---------------------------------------------------------------------------
+   ⑪ 关于笔者 —— 首屏头像框 + 单栏布局
+   ----------------------------------------------------------------------------
+   参考 poetize.cn/love 的首屏：半透明毛玻璃面板里放圆形头像 + 名字。
+   按确认过的方案收敛为：一个头像、不引入插画背景、保持现有粉色渐变。
+
+   怎么判定「这是关于页」：用 :has(#about-timer)。
+     · 与 hero-waves.js / about-hero.js 同一判据，三者永远同进同退
+     · 纯 CSS，不需要 JS 打标记，也就不会闪一下未样式化
+     · :has() 在 Chrome 105+ / Safari 15.4+ / Firefox 121+ 均支持
+
+   ⚠️ 标题为什么是「视觉隐藏」而不是 display:none：
+     直接删掉会让页面失去 H1，下面正文的 ## 我是谁 就成了跳级标题，
+     读屏的标题导航会断掉（ui-ux-pro-max: Heading Hierarchy）。
+     所以保留在无障碍树里、只是看不见：
+       · 读屏仍能读到「关于笔者」这个 H1
+       · 视觉上首屏只剩头像框，与参考站一致
+     页面靠导航栏高亮和头像框里的名字表明当前在哪。
+   --------------------------------------------------------------------------- */
+
+html:not([data-theme='dark']):has(#about-timer) #page-header.not-home-page {
+  height: 420px;         /* 只留高度；让位间距已由 ⑨ 的通用规则覆盖 */
+}
+
+/* 标题：视觉隐藏，保留给辅助技术（下方 .sr-only 同款写法，但不用类，
+   因为 #page-site-info 是主题生成的、加不了类） */
+html:not([data-theme='dark']):has(#about-timer) #page-header #page-site-info {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 容器：只负责定位与居中，自身不画任何东西 */
+html:not([data-theme='dark']) .about-hero {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;     /* 纯展示层，不拦下方元素的点击 */
+}
+
+/* 毛玻璃面板：白色半透明 + backdrop blur，压在粉色渐变上 */
+html:not([data-theme='dark']) .about-hero__panel {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 26px 40px 20px;
+  border-radius: 34px;
+  background-color: rgba(255, 255, 255, .28);
+  border: 1px solid rgba(255, 255, 255, .5);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+html:not([data-theme='dark']) .about-hero__avatar {
+  display: block;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid rgba(255, 255, 255, .9);
+  box-shadow: 0 8px 24px rgba(102, 26, 82, .18);
+  background-color: #FFFAFC;   /* 动图解码前的底色，避免先闪一个空洞 */
+}
+
+html:not([data-theme='dark']) .about-hero__name {
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1;
+  color: #661A52;             /* 对面板白底 11.4:1 */
+  letter-spacing: .04em;
+}
+
+/* 窄屏：首屏降低，面板与头像等比缩小 */
+@media (max-width: 768px) {
+  html:not([data-theme='dark']):has(#about-timer) #page-header.not-home-page {
+    height: 340px;
+  }
+  html:not([data-theme='dark']) .about-hero__panel {
+    gap: 10px;
+    padding: 20px 30px 15px;
+    border-radius: 28px;
+  }
+  html:not([data-theme='dark']) .about-hero__avatar {
+    width: 104px;
+    height: 104px;
+    border-width: 3px;
+  }
+  html:not([data-theme='dark']) .about-hero__name {
+    font-size: 16px;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   ⑫ 页面标题 —— 打字机（关于页除外）
+   ----------------------------------------------------------------------------
+   脚本见 source/js/hero-typing.js。这里只负责「已敲到 / 未敲到 / 光标」三态。
+
+   ⚠️ 为什么必须覆盖 display：
+      主题给 #site-title 设了 display: -webkit-box（为了 -webkit-line-clamp
+      做行数截断）。-webkit-box 会把子元素当成**纵向堆叠的块**，
+      逐字 span 会变成一个字一行。标题本来就短、不需要截断，所以改回 block。
+
+   ⚠️ 未敲到的字用 visibility: hidden 而不是 display: none ——
+      前者仍然占位，所以标题的排版从头到尾都在最终位置，
+      逐字显示时不会有任何位移（居中的标题尤其明显）。
+   --------------------------------------------------------------------------- */
+
+html:not([data-theme='dark']) #page-header #site-title {
+  display: block;
+}
+
+html:not([data-theme='dark']) #page-header #site-title .type-ch {
+  visibility: hidden;
+}
+
+html:not([data-theme='dark']) #page-header #site-title .type-ch.is-on {
+  visibility: visible;
+}
+
+/* 光标：一条与文字同色的竖条，标题敲完后**持续闪烁** */
+html:not([data-theme='dark']) #page-header #site-title .type-cursor {
+  display: inline-block;
+  width: 3px;
+  height: .82em;
+  margin-left: .08em;
+  vertical-align: -.06em;
+  background-color: currentColor;
+  animation: type-blink .8s step-end infinite;
+}
+
+/* 注：这里原本有一条
+     .type-cursor.is-done { animation: none; opacity: 0; transition: opacity .45s ease }
+   作用是敲完 1.6 秒后把光标淡出、不留一条一直闪的竖线。
+   用户明确要求「标题完全显现后光标会一直闪动」，所以整条删掉了，
+   脚本里的 CURSOR_HOLD 定时器也一并移除。
+   代价是这属于 skill 里 Continuous Animation（Medium）说的"无限循环装饰动画"，
+   缓解办法见下面的 reduced-motion 处理。 */
+
+@keyframes type-blink {
+  50% { opacity: 0; }
+}
+
+/* 系统开启「减少动效」：光标**保留但静止**，不再闪烁。
+   之前这里是 display: none（整个藏掉），改成静止可见更好 ——
+   保住「这里有个光标」的视觉结构，只是它不动。
+
+   依据（ui-ux-pro-max）：
+     · Reduced Motion（**High 严重级**）—— "Do: Check prefers-reduced-motion /
+       Don't: Ignore accessibility motion settings"，装饰性动画必须停。
+     · Continuous Animation（Medium）—— 无限循环动画对动效敏感的人是干扰源，
+       「一直闪的光标」正属于这一类。这条与用户要求冲突，用户要求优先，
+       但减动效分支是它的正解。
+   减动效下正文本来就是瞬间全显、不逐字敲，也不会因为光标不动而显得没结束。 */
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-theme='dark']) #page-header #site-title .type-cursor {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   ⑬ 波浪的作用范围 —— 已改为全站
+   原先这里有一条 :has(.flink) #page-header.not-home-page { margin-bottom: 64px }，
+   用来单独给友链页让位。现在波浪改成全站注入（见 hero-waves.js），
+   让位间距统一由 ⑨ 的 #page-header 通用规则负责，所以这条已删除。
+
+   与 ⑪ 的分工：⑨ 管「所有页头留 64px」，⑪ 只管「关于页首屏要 420px 高」。
+   --------------------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------------------
+   ⑭ 友链卡片 —— 悬浮态重做
+   ----------------------------------------------------------------------------
+   主题原本的悬浮是三件事叠加，合起来把卡片"抹平"成一块纯色：
+     ① .flink-list-item:before  平铺色块 background: var(--text-bg-hover)，
+                                从 scale(0) 炸到 scale(1)
+     ② .flink-item-icon         hover 时 width: 0 + margin-left: -10px，头像被抽走
+     ③ 卡片本体                没有任何位移、阴影或描边变化
+   所以鼠标一上去，头像消失、白底被纯色盖掉，只剩一片单色。
+
+   改成：卡片保持白色、轻轻抬起、粉描边 + 柔和阴影，头像**留在原地**只微放大，
+   色块换成几乎察觉不到的浅渐变（保留主题那个 scale-in 的动效手感）。
+
+   依据（ui-ux-pro-max 两条命中的规则）：
+     · Hover States (Medium) — "Do: Change cursor and add subtle visual change"
+       主题做的是整块换色，不是 subtle。
+     · Hover vs Tap (High) — "Hover effects don't work on touch devices /
+       Don't: Rely only on hover"。卡片本身是 <a>，键盘走 :focus-within 补上，
+       所以反馈不只挂在 hover 上。
+   另外主题动的是 width（布局属性）—— Animation 类明确写 Don't: Layout thrashing。
+   这里只过渡 transform / box-shadow / background-color，都是合成友好属性。
+
+   ⚠️ 特异性：#page-header 那类前缀在这里换成 html:not([data-theme='dark'])，
+      它的 :not() 取内部选择器的特异性 [data-theme='dark'] = (0,1,0)，
+      所以本段规则 (0,7,1) 能压过主题 .container .flink ... (0,6,0)。
+   --------------------------------------------------------------------------- */
+
+/* 默认态：只补过渡，不改外观 */
+html:not([data-theme='dark']) .container .flink .flink-list > .flink-list-item {
+  transition: transform .25s cubic-bezier(.2, .7, .3, 1),
+              box-shadow .25s ease,
+              background-color .25s ease;
+}
+
+/* 悬浮 / 键盘聚焦：抬起 + 白底 + 粉描边 + 柔和阴影
+   （用 inset box-shadow 当描边，不用 border —— 加 border 会改变盒尺寸） */
+html:not([data-theme='dark']) .container .flink .flink-list > .flink-list-item:hover,
+html:not([data-theme='dark']) .container .flink .flink-list > .flink-list-item:focus-within {
+  transform: translateY(-3px);
+  background-color: #FFFFFF;
+  box-shadow: 0 7px 18px -7px rgba(175, 29, 136, .26),
+              inset 0 0 0 1.5px #F79FDD;
+}
+
+/* 主题那个"炸开"的色块：改成极浅渐变，保留 scale-in 的手感，但不再是一片死色。
+   ⚠️ 方向必须是 90deg（正左 → 正右）。
+      之前写的 152deg 是斜向，视觉上等于「从左上角往右下角铺」，
+      用户要求改成「从左到右填满」。
+   同时把展开原点挪到左边 —— 主题默认 transform-origin 是 50% 50%，
+   色块会从正中间向四周涨开；配合 origin: left center 之后，
+   色块从左边开始向右推进，渐变方向和展开方向就一致了。 */
+html:not([data-theme='dark']) .container .flink .flink-list > .flink-list-item:before {
+  background: linear-gradient(90deg, #FFFFFF 0%, #FFF0FA 100%);
+  transform-origin: left center;
+}
+
+/* 头像：别再抽走它。宽度和左边距复原，只做很小的放大 */
+html:not([data-theme='dark']) .container .flink .flink-list > .flink-list-item .flink-item-icon {
+  transition: transform .25s cubic-bezier(.2, .7, .3, 1);
+}
+
+html:not([data-theme='dark']) .container .flink .flink-list > .flink-list-item:hover .flink-item-icon,
+html:not([data-theme='dark']) .container .flink .flink-list > .flink-list-item:focus-within .flink-item-icon {
+  width: 60px;
+  margin-left: 10px;
+  transform: scale(1.06);
+}
+
+/* 站点名在悬浮时转主色（对比度 #AF1D88 对白底 6.06:1，达标） */
+html:not([data-theme='dark']) .container .flink .flink-list > .flink-list-item:hover .flink-item-name,
+html:not([data-theme='dark']) .container .flink .flink-list > .flink-list-item:focus-within .flink-item-name {
+  color: #AF1D88;
+}
+
+/* 键盘焦点环：主题在卡片上没有 → 补一个看得见的 */
+html:not([data-theme='dark']) .container .flink .flink-list > .flink-list-item:focus-within {
+  outline: 2px solid #AF1D88;
+  outline-offset: 3px;
+}
+
+/* 系统开启「减少动效」：去掉位移与缩放，只保留颜色/描边反馈 ——
+   反馈不能一起删掉，否则悬浮就没任何提示了 */
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-theme='dark']) .container .flink .flink-list > .flink-list-item {
+    transition: box-shadow .25s ease, background-color .25s ease;
+  }
+  html:not([data-theme='dark']) .container .flink .flink-list > .flink-list-item:hover,
+  html:not([data-theme='dark']) .container .flink .flink-list > .flink-list-item:focus-within {
+    transform: none;
+  }
+  html:not([data-theme='dark']) .container .flink .flink-list > .flink-list-item:hover .flink-item-icon,
+  html:not([data-theme='dark']) .container .flink .flink-list > .flink-list-item:focus-within .flink-item-icon {
+    transform: none;
+  }
+}

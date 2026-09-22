@@ -1,0 +1,68 @@
+/* ============================================================================
+   看板娘（OhMyLive2D）布局补丁
+   ----------------------------------------------------------------------------
+   与 pink-white.css 分开存放：那个文件管粉白主题配色（且限定浅色模式），
+   这个文件管看板娘自身的层级与位置，与主题色、暗色模式都无关。
+
+   ⚠️ 必须用 ID 选择器，不能用类选择器。
+     组件的元素创建函数（源码里的 ui）是这样写的：
+
+       ui = i => {
+         const t = document.createElement(i.tagName);
+         return t.id = i.id,                                  // 一律设为 id
+                i.className && (t.className = i.className),    // 传了才设 class
+                ...
+       }
+
+     而各元素的创建参数分别是：
+       tips      ui({ id: hi.tips,      tagName: "div" })                      → 只有 id
+       canvas    ui({ id: hi.canvas,    tagName: "canvas" })                   → 只有 id
+       statusBar ui({ id: hi.statusBar, tagName: "div" })                      → 只有 id
+       menus     ui({ id: hi.menus,     tagName: "div", className: hi.menus }) → id + class
+
+     也就是说 .oml2d-tips / .oml2d-canvas / .oml2d-statusBar 这三个类选择器
+     在页面上根本匹配不到任何元素。唯一有 class 的是 menus。
+
+   ----------------------------------------------------------------------------
+   问题一：层级
+     组件给 canvas 写的内联样式是 position: relative; z-index: 9998
+     （setCanvasStyle({ width:"100%", height:"100%", zIndex:"9998", position:"relative" })），
+     而气泡 tips 的默认样式（源码里的 $l 对象）完全没有 z-index。
+     于是模型 canvas 稳稳盖在气泡上面，人物把自己说的话挡住了。
+
+   问题二：位置
+     气泡默认在舞台内部的最上方：position: absolute; top: 0; width: 60%
+     而模型画满整个舞台，人物的头/帽子正好压在气泡左半边。
+     只修层级文字虽可读，气泡仍然糊在脸上，观感很差，所以要一并挪位置。
+
+   关于 !important：
+     组件是通过 Object.assign(element.style, ...) 写内联样式的。
+     普通样式表规则压不过内联样式，只有 !important 可以。
+   ============================================================================ */
+
+/* --- 层级：canvas 压到底，气泡与菜单抬到模型之上 --- */
+#oml2d-canvas {
+  z-index: 0 !important;
+}
+#oml2d-tips,
+#oml2d-menus {
+  z-index: 10000 !important;
+}
+
+/* 状态条是舞台的兄弟元素（挂到 body 上），组件给它 9998，低于舞台，
+   滑入时同样会被模型盖住。 */
+#oml2d-statusBar {
+  z-index: 10000 !important;
+}
+
+/* --- 位置：把气泡移到舞台上方，并放宽以免长句被截断 ---
+   top: -110px 是相对舞台上边缘向上偏移，落在模型上方。
+   组件作者在自己写的 Hexo 文档示例里给的是 top: -100px，这里留 10px 余量。
+
+   宽度从默认的 60%（舞台 250px → 仅 150px）放宽到 240px：
+   默认的按时段欢迎语（如"傍晚了！工作一天幸苦啦~"）在 150px 内会折成多行，
+   甚至被 messageLine（默认 3 行）截断。 */
+#oml2d-tips {
+  top: -110px !important;
+  width: 240px !important;
+}
