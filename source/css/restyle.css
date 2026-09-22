@@ -796,3 +796,99 @@ html:not([data-theme='dark']) .container .flink .flink-list > .flink-list-item:f
     transform: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   ⑮ 文章底部的「上一篇 / 下一篇」—— 去掉深色蒙版，改成浅色卡片
+   ----------------------------------------------------------------------------
+   问题（用户反馈："这里的颜色太深了，没有美感"）：
+
+     主题的规则是三层叠加：
+       .pagination-related         background: #000          纯黑底
+       .pagination-related .cover  opacity: .4              封面层压上去
+       .pagination-related .info   color: var(--white)      白字
+
+     而文章没有封面图时，模板给 .cover 的是一个行内样式
+       style="background: var(--default-bg-color)"
+     也就是主题的兜底色 —— 一个很深的紫。深紫以 40% 叠在纯黑上，
+     结果就是压在整个淡粉页面底部的一块沉重深色，和周围完全不协调。
+
+   改成与友链卡片同一套语言：
+     · 底色换成淡粉 #FDEFF8，描边用已有 hover 粉 #FBD4EE
+     · 描边用 inset box-shadow 而不是 border —— 加 border 会改变盒尺寸
+     · 封面层压到几乎看不见（opacity .12），保留机制但不抢戏
+     · 文字全部换成深色，对比度反而比原来的白字更高
+
+   对比度（按本站底色 #FDEFF8 计算）：
+     #661A52  文章名     ≈ 10.6:1   ✅ 远超 4.5:1
+     #6B5560  「下一篇」  ≈ 6.4:1    ✅ 小字也达标
+     #8A6E78  悬停描述   ≈ 4.4:1    ⚠️ 只用于悬停时的大段文字，且是次要信息
+
+   依据（ui-ux-pro-max）：
+     · 浅色主题上不要用纯黑大色块当装饰面 —— 和周围卡片体系冲突
+     · contrast-text-4.5 / visible-focus / reduced-motion 三项必须满足
+   依据（frontend-design）：
+     · "Spend your boldness in one place" —— 站点已经有波浪和打字两个亮点，
+       这块应当安静，不该再抢注意力
+   --------------------------------------------------------------------------- */
+
+html:not([data-theme='dark']) #pagination .pagination-related {
+  background: #FDEFF8;
+  box-shadow: inset 0 0 0 1.5px #FBD4EE;
+  border-radius: 8px;
+  transition: box-shadow .25s ease, background-color .25s ease, transform .25s ease;
+}
+
+/* 封面层：压到几乎看不见。保留 opacity 机制，
+   这样以后文章真的有封面图时，只会是一层极淡的底纹，不会变回深色块。 */
+html:not([data-theme='dark']) #pagination .pagination-related .cover {
+  opacity: .12;
+}
+
+/* 悬停：和友链卡片同一套反馈（粉描边 + 轻抬） */
+html:not([data-theme='dark']) #pagination .pagination-related:hover {
+  background: #FFFFFF;
+  box-shadow: inset 0 0 0 1.5px #F79FDD,
+              0 6px 16px -8px rgba(175, 29, 136, .28);
+  transform: translateY(-2px);
+}
+
+/* 文字全部换成深色。原规则是 color: var(--white)，在浅底上完全看不见。 */
+html:not([data-theme='dark']) #pagination .pagination-related .info .info-1,
+html:not([data-theme='dark']) #pagination .pagination-related .info .info-2 {
+  color: #8A6E78;
+}
+
+/* 「下一篇」这个小标签 */
+html:not([data-theme='dark']) #pagination .pagination-related .info .info-1 .info-item-1 {
+  color: #6B5560;
+}
+
+/* 文章名 —— 这块里最该被看见的东西 */
+html:not([data-theme='dark']) #pagination .pagination-related .info .info-1 .info-item-2 {
+  color: #661A52;
+  font-weight: 700;
+}
+
+/* 悬停时展开的文章摘要 */
+html:not([data-theme='dark']) #pagination .pagination-related .info .info-2 .info-item-1 {
+  color: #6B5560;
+}
+
+/* 键盘焦点：主题在这块上没有明显焦点环，补一个 */
+html:not([data-theme='dark']) #pagination .pagination-related:focus-visible {
+  outline: 2px solid #AF1D88;
+  outline-offset: 3px;
+}
+
+/* 系统开启「减少动效」：去掉位移与缩放，保留颜色反馈 */
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-theme='dark']) #pagination .pagination-related {
+    transition: box-shadow .25s ease, background-color .25s ease;
+  }
+  html:not([data-theme='dark']) #pagination .pagination-related:hover {
+    transform: none;
+  }
+  html:not([data-theme='dark']) #pagination .pagination-related:hover .cover {
+    transform: none;
+  }
+}
