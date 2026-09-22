@@ -1004,3 +1004,124 @@ html:not([data-theme='dark']) .twikoo .tk-admin .tk-admin-config-select option {
   color: #FFFFFF;
   background: #333333;
 }
+
+/* ---------------------------------------------------------------------------
+   ⑰ 文章底部「上一篇 / 下一篇」—— 重做比例与可点暗示
+   ----------------------------------------------------------------------------
+   用户反馈："这个有点丑了，改好看一点"
+
+   看截图能定位到三个问题，都**不是颜色问题**（颜色上一轮已经调过）：
+
+     ① 比例失衡 —— 每块 150px 高，里面只有两行字，上下各留 60px 空白
+     ② 没有可点的暗示 —— 光秃秃两块色板，看不出能点、也看不出往哪走
+     ③ 文字贴在靠外的角落，和方向没有关系
+
+   依据（ui-ux-pro-max，命中一条 Medium）：
+     · Input Affordance —— "Inputs should look interactive"
+       / Don't: "Inputs that look like plain text"
+       → 这两块正是"看起来不像能点"的典型。修法是加一个**方向箭头**。
+     · Keyboard Navigation（High）的 visible focus 已经满足（⑮ 里有焦点环），保留。
+
+   改动：
+     · 高度 150px → 104px，让留白和内容成比例
+     · 加一个**纯 CSS 画的雪佛龙箭头**（两条边框旋转 45°，不依赖字体也不引图片）
+     · 箭头指向"要去哪"：上一篇朝左、下一篇朝右
+     · 悬停时箭头**向外滑 4px** —— 这是"往那边走"的空间隐喻
+     · 悬停时箭头颜色加深，和已有的粉描边、上抬配合
+
+   ⚠️ 方向的判据是 .info.text-right 而不是 prev-post/next-post：
+      实测模板输出的类是 class="pagination-related full-width"，
+      **没有** prev-post / next-post（主题 CSS 里虽然写了 .next-post 的规则，
+      但模板并不输出这个类）。方向实际由 .info 上的 text-right 表达 ——
+      上一页的 .info 没有这个类，下一页的有。所以这里按 text-right 区分。
+
+   ⚠️ 箭头挂在 .info 上而不是 <a> 上：
+      .info 本身就是 position:absolute（主题设的），可以直接当定位容器；
+      挂在 <a> 上就得用 :has() 反查方向，能写但没必要。
+   --------------------------------------------------------------------------- */
+
+/* 高度收回来 —— 比例是这个块最主要的观感问题 */
+html:not([data-theme='dark']) #pagination .pagination-related {
+  height: 104px;
+}
+
+/* 箭头本体：两条边框旋转成雪佛龙 */
+html:not([data-theme='dark']) #pagination .pagination-related .info::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid #AF1D88;
+  border-right: 2px solid #AF1D88;
+  border-radius: 1px;
+  transition: transform .25s ease, border-color .25s ease;
+}
+
+/* 上一篇：箭头在左，尖朝左 */
+html:not([data-theme='dark']) #pagination .pagination-related .info:not(.text-right)::after {
+  left: 16px;
+  transform: translateY(-50%) rotate(-135deg);
+}
+
+/* 下一篇：箭头在右，尖朝右 */
+html:not([data-theme='dark']) #pagination .pagination-related .info.text-right::after {
+  right: 16px;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+/* 悬停：箭头向外滑，颜色加深 —— "往那个方向走"的提示 */
+html:not([data-theme='dark']) #pagination .pagination-related:hover .info:not(.text-right)::after {
+  border-color: #661A52;
+  transform: translateY(-50%) rotate(-135deg) translate(-4px, 0);
+}
+html:not([data-theme='dark']) #pagination .pagination-related:hover .info.text-right::after {
+  border-color: #661A52;
+  transform: translateY(-50%) rotate(45deg) translate(4px, 0);
+}
+
+/* 文字让开箭头的位置，别和它打架 */
+html:not([data-theme='dark']) #pagination .pagination-related .info:not(.text-right) {
+  padding-left: 44px;
+}
+html:not([data-theme='dark']) #pagination .pagination-related .info.text-right {
+  padding-right: 44px;
+}
+
+/* 上下两行的层次：小标签更小更散，标题更大更实 */
+html:not([data-theme='dark']) #pagination .pagination-related .info .info-1 .info-item-1 {
+  font-size: .8em;
+  letter-spacing: .08em;
+  margin-bottom: 2px;
+}
+html:not([data-theme='dark']) #pagination .pagination-related .info .info-1 .info-item-2 {
+  font-size: 1.05em;
+  line-height: 1.4;
+}
+
+/* 减少动效：箭头不再滑动，但颜色变化保留（不然悬停就没反馈了） */
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-theme='dark']) #pagination .pagination-related .info::after {
+    transition: border-color .25s ease;
+  }
+  html:not([data-theme='dark']) #pagination .pagination-related:hover .info:not(.text-right)::after {
+    transform: translateY(-50%) rotate(-135deg);
+  }
+  html:not([data-theme='dark']) #pagination .pagination-related:hover .info.text-right::after {
+    transform: translateY(-50%) rotate(45deg);
+  }
+}
+
+/* 窄屏：主题会把两块竖着堆起来，箭头位置仍然成立，
+   但内边距收一点，避免小屏上文字被挤得太窄 */
+@media (max-width: 768px) {
+  html:not([data-theme='dark']) #pagination .pagination-related .info:not(.text-right) {
+    padding-left: 38px;
+  }
+  html:not([data-theme='dark']) #pagination .pagination-related .info.text-right {
+    padding-right: 38px;
+  }
+  html:not([data-theme='dark']) #pagination .pagination-related {
+    height: 96px;
+  }
+}
