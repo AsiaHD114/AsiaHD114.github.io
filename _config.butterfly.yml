@@ -301,7 +301,9 @@ aside:
       enable: true
       icon: fab fa-github
       text: Follow Me
-      link: https://github.com/xxxxxx
+      # 侧栏 author 卡片底部那个按钮的目标地址。
+      # 原来是主题模板的占位符 https://github.com/xxxxxx，会跳到不存在的页面。
+      link: https://github.com/AsiaHD114
   card_announcement:
     enable: true
     content: This is my Blog
