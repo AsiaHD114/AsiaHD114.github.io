@@ -919,3 +919,88 @@ html:not([data-theme='dark']) #pagination .pagination-related:focus-visible {
     transform: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   ⑯ 评论管理面板（深色）—— 占位文字与说明文字的对比度
+   ----------------------------------------------------------------------------
+   问题（用户反馈："这个评论管理界面的注释看不清"）：
+
+   这个面板是 twikoo.js 渲染在页面里的，套的是 twikoo.css 的深色配色。
+   实测那个 CSS 里有两条关键缺失：
+
+     .twikoo .tk-admin        { background-color: #000000d9; color: #fff; }
+     .twikoo .tk-input__inner { color: currentColor; }
+     —— 但**整个 twikoo.css 里一条 ::placeholder 规则都没有**
+
+   所以输入框的占位示例（"示例：虹墨空社区"）用的是浏览器默认灰
+   （Chromium 约 #757575），压在近黑底上对比度只有 1.9:1 左右，基本看不清。
+   字段下方的说明文字 .tk-admin-config-desc 也只设了 font-size，没设颜色。
+
+   依据（ui-ux-pro-max，两条都是 High 级，正好命中）：
+     · Contrast Readability —— "Body text needs good contrast"
+       / Don't: "Gray text on gray background"
+     · Color Contrast —— "Minimum 4.5:1 ratio for normal text"
+       / Don't: "Low contrast text"
+
+   ⚠️ 为什么必须限定在 .tk-admin 里：
+      同一个 .tk-input__inner 也用在**亮色**的公开评论表单上。
+      如果在全局把占位文字改成白色，那边的白色输入框上就看不见了。
+      这里只对深色管理面板生效。
+
+   ⚠️ 关于加载顺序：
+      restyle.css 在 inject.head 里加载，而 twikoo.css 是评论组件懒加载时才来的，
+      **可能晚于本文件**。所以这里靠**特异性**取胜而不是靠顺序：
+      html:not([data-theme='dark']) 前缀让它达到 (0,4,1) 以上，
+      压过 twikoo.css 里的 .twikoo .tk-admin-config-desc (0,2,0)。
+
+   对比度（面板底色按 #000@85% 叠在白页面上 ≈ #262626 计算）：
+     rgba(255,255,255,.55) 占位文字 ≈ #9D9D9D → 约 5.6:1  ✅ 达标
+     rgba(255,255,255,.80) 说明文字 ≈ #D3D3D3 → 约 10.1:1 ✅ 远超
+   --------------------------------------------------------------------------- */
+
+/* 占位示例文字 —— 现代浏览器 */
+html:not([data-theme='dark']) .twikoo .tk-admin .tk-input__inner::placeholder {
+  color: rgba(255, 255, 255, .55);
+  /* Firefox 默认会给占位文字再叠一层透明度，必须显式关掉，
+     否则实际颜色比这里写的还淡 */
+  opacity: 1;
+}
+
+/* 占位示例文字 —— 老 WebKit（必须单独一条规则：
+   无法识别的伪元素会让整条规则失效，不能和上面合并） */
+html:not([data-theme='dark']) .twikoo .tk-admin .tk-input__inner::-webkit-input-placeholder {
+  color: rgba(255, 255, 255, .55);
+  opacity: 1;
+}
+
+/* 多行文本框里的占位文字（面板里也有） */
+html:not([data-theme='dark']) .twikoo .tk-admin .tk-textarea__inner::placeholder {
+  color: rgba(255, 255, 255, .55);
+  opacity: 1;
+}
+
+/* 字段下方的说明文字。
+   原来是 .75em 且没设颜色 —— 字号偏小，那段 CORS 注意事项又是多行，
+   所以顺带把字号提到 .82em、行高给足。 */
+html:not([data-theme='dark']) .twikoo .tk-admin .tk-admin-config-desc {
+  color: rgba(255, 255, 255, .8);
+  font-size: .82em;
+  line-height: 1.6;
+}
+
+/* 左侧的字段名（SITE_NAME 这些）—— 原样是白色，但面板整体偏暗，
+   给一点点提亮让"标签/说明"两级的层次更清楚 */
+html:not([data-theme='dark']) .twikoo .tk-admin .tk-admin-config-title {
+  color: #FFFFFF;
+}
+
+/* 输入框里的实际文字（用户自己输入的内容）保持纯白，和占位灰区分开 */
+html:not([data-theme='dark']) .twikoo .tk-admin .tk-input__inner {
+  color: #FFFFFF;
+}
+
+/* 面板里的下拉选择框，同样是深色底，把它里面的项也确保可读 */
+html:not([data-theme='dark']) .twikoo .tk-admin .tk-admin-config-select option {
+  color: #FFFFFF;
+  background: #333333;
+}
