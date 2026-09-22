@@ -174,7 +174,24 @@ snackbar_css:
 twikoo:
   name: twikoo
   file: dist/twikoo.all.min.js
-  version: 1.7.15
+  # ⚠️ 这里被本站改过：原值是 1.7.15。
+  #
+  # 原因：本站的 Twikoo 后端部署在 Netlify，用的是官方模板
+  # （package.json 里写 "twikoo-netlify": "latest"），实测后端版本 2.0.8。
+  # 前端 1.7.15 配后端 2.0.8 会直接报错：
+  #   {"code":1001,"message":"请更新 Twikoo 云函数至最新版本"}
+  # 所以把前端钉到同一个版本 2.0.8。
+  #
+  # 文件名核对过：2.0.8 的 dist/ 下仍有 twikoo.all.min.js（自带样式），路径不变。
+  #
+  # ⚠️ 这是主题文件。以后升级 Butterfly（下载新版覆盖 themes/butterfly/）时，
+  #    这一行会被还原成 1.7.15，需要重新改回 2.0.8。
+  #    症状很好认：评论区报 code 1001。
+  #
+  # ⚠️ 注意 _config.butterfly.yml 里的 asset.twikoo 覆盖是无效的 ——
+  #    Butterfly 的主题脚本会用本文件的值重新生成 theme.asset.*，
+  #    把配置里的覆盖顶掉。改这里才管用。
+  version: 2.0.8
 typed:
   name: typed.js
   file: dist/typed.umd.js

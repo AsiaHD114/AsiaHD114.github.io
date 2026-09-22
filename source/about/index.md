@@ -8,7 +8,7 @@ aside: false
 ---
 
 <div class="about-timer" id="about-timer">
-  <p class="about-timer__label" data-at="label">这是我们诞生于世的</p>
+  <p class="about-timer__label" data-at="label">这是我诞生于世的</p>
   <p class="about-timer__elapsed" aria-hidden="true"><span class="about-timer__pre">第</span><b data-at="years">0</b><span class="about-timer__unit">年</span><b data-at="months">0</b><span class="about-timer__unit">月</span><b data-at="days">0</b><span class="about-timer__unit">日</span><b data-at="hours">00</b><span class="about-timer__unit">时</span><b data-at="mins">00</b><span class="about-timer__unit">分</span><b data-at="secs">00</b><span class="about-timer__unit">秒</span></p>
   <p class="about-timer__countdown" data-at="cd-row" aria-hidden="true"><span data-at="cd-label">生日倒计时</span>：<span data-at="cd-value"></span></p>
   <p class="about-timer__sr" data-at="sr">已经走过 0年0月0天 0时0分0秒。</p>

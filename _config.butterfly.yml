@@ -558,12 +558,18 @@ comments:
   # 不需要评论功能就留空
   # 可选：Disqus/Disqusjs/Livere/Gitalk/Valine/Waline/Utterances/Facebook Comments/Twikoo/Giscus/Remark42/Artalk
   # 同时使用两套的写法：Disqus,Waline
-  use:
+  #
+  # ⚠️ 大小写必须与主题模板里的 case 分支完全一致。
+  # 主题 layout/includes/third-party/comments/index.pug 里写的是 when 'Twikoo'。
+  use: Twikoo
   # 是否在按钮旁显示评论系统的名称
   text: true
   # 懒加载：评论元素进入浏览器可视区域时才加载评论系统
   # 如果设为 true，评论数会显示不准确
-  lazyload: false
+  #
+  # 这里开成 true 是安全的：下面的 count 和 card_post_count 都是 false，
+  # 所以"评论数不准"那个副作用对本站不存在，而懒加载能省掉首屏一次外部请求。
+  lazyload: true
   # 是否在文章顶部大图中显示评论数
   count: false
   # 是否在首页文章卡片中显示评论数
@@ -644,13 +650,27 @@ facebook_comments:
   lang: zh_cn
 
 # Twikoo
+# Twikoo
 # https://github.com/imaegoo/twikoo
 twikoo:
-  envId:
+  # Twikoo 后端的地址。部署在 Netlify，所以是"站点地址 + 函数路径"。
+  #
+  # ⚠️ 后缀 /.netlify/functions/twikoo 不能省。
+  #    因为函数文件在仓库里的位置就是 netlify/functions/twikoo.js，
+  #    Netlify 把目录结构直接映射成 URL 路径。
+  #    只写 https://xxx.netlify.app 的话前端调不到接口。
+  #
+  # ⚠️ 这个地址是公开的，可以安全地写在配置文件里。
+  #    真正敏感的是 MONGODB_URI —— 那个只在 Netlify 的环境变量里，绝不能写进仓库。
+  envId: https://endearing-alpaca-7258d9.netlify.app/.netlify/functions/twikoo
+  # ⚠️ 留空。region 只对腾讯云 CloudBase 部署有意义；
+  #    Netlify/Vercel/Railway 这些填了反而会出错。
   region:
   # 用 Twikoo 的访客数作为页面访问量
   visitor: false
   option:
+    # 界面语言
+    lang: zh-CN
 
 # Giscus
 # https://giscus.app/
