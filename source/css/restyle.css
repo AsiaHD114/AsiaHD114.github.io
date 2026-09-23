@@ -1246,39 +1246,15 @@ html:not([data-theme='dark']) #page-header #site-title {
     0 4px 20px rgba(140, 20, 104, .28);
 }
 
-/* 首页导航栏：文字和标题压在同一个背景上，所以一起用白字 + 深玫瑰投影。
-   ----------------------------------------------------------------------------
-   ⚠️ 三个必须的限定，少一个都会出问题：
-
-     ① 必须带上 span.site-page。
-        导航项不全是 <a>：主页/友链/关于是 <a class="site-page">，
-        而「博文」下拉和「搜索」是 <span class="site-page">。
-        上一版只写 #nav a，结果一半白一半深（用户反馈"顶部颜色不统一"）。
-
-     ② 必须排除 .child。
-        下拉菜单展开后，里面的条目是 <a class="site-page child">，
-        它们浮在**白色**下拉面板上 —— 变白就什么都看不见了。
-
-     ③ 必须排除 .nav-fixed 与 .not-top-img。
-        Butterfly 在滚动后会给 #page-header 加这两个类，导航栏随之变成
-        **不透明底色**。本规则特异性高于主题那条，不排除的话会变成白字压白底。
-
-   投影比标题轻一档 —— 导航字号小，太重会糊。
-   ---------------------------------------------------------------------------- */
-html:not([data-theme='dark']) #page-header.full_page:not(.nav-fixed):not(.not-top-img) #nav a:not(.child),
-html:not([data-theme='dark']) #page-header.full_page:not(.nav-fixed):not(.not-top-img) #nav span.site-page,
-html:not([data-theme='dark']) #page-header.full_page:not(.nav-fixed):not(.not-top-img) #nav #blog-info,
-html:not([data-theme='dark']) #page-header.full_page:not(.nav-fixed):not(.not-top-img) #nav .site-name {
-  color: #FFFFFF;
-  text-shadow:
-    0 1px 2px rgba(102, 26, 82, .5),
-    0 2px 6px rgba(140, 20, 104, .35);
-}
-/* 悬停：换成浅粉，比纯白多一点反馈 */
-html:not([data-theme='dark']) #page-header.full_page:not(.nav-fixed):not(.not-top-img) #nav a:not(.child):hover,
-html:not([data-theme='dark']) #page-header.full_page:not(.nav-fixed):not(.not-top-img) #nav span.site-page:hover {
-  color: #FDEFF8;
-}
+/* ⚠️ 这里原本有一段「首页导航栏用白字 + 深玫瑰投影」的覆盖，已整段删除。
+   用户反馈："顶部这些应该做得和其他页面一样，而不是单独白色"。
+   查主题原本的配色：顶部未滚动时导航是 var(--light-grey) = #eee（本来就是近白），
+   滚动后/吸顶后是 var(--font-color) = #4c4948（深灰），悬停是 #fff。
+   我那条把它改成 #FFFFFF，颜色上几乎没差；真正让它"看起来单独"的是额外加的
+   深色 text-shadow —— 别的页面的导航没有这层投影。
+   删掉后首页导航回到主题配色，与其它页面完全一致。
+   大标题 #site-title 的白字与投影保留：那是用户单独要求过的（「改回白色字」），
+   而且首屏底部是 #FFB3EB 渐变，标题所在区域偏浅，需要投影撑住可读性。 */
 
 /* ⚠️ 这里原本是一个 @media (max-width: 768px) 块，用来微调首屏背景图的取景。
    图片挪到 ⑳ 的 body::before 固定层后，这个块的内部规则被删除，
