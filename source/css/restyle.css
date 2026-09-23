@@ -1117,3 +1117,67 @@ html:not([data-theme='dark']) #pagination .pagination-related .info.text-right {
     height: 96px;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   ⑱ 首页文章卡片 + 正文大卡片 —— 统一"硬阴影 + 左上抬"的悬停反馈
+   ----------------------------------------------------------------------------
+   用户看到侧栏作者卡的悬停效果后要求："将这个动效，用于所有框"。
+   澄清后确认的范围：
+     · 要：首页文章卡片、正文大卡片
+     · 保持现状：侧栏卡片（它本来就是这套效果的出处）、标签云、分页页码
+     · 不碰：友链卡片、文章底部上下篇、聊天喵评论区
+
+   目标效果（与 #aside-content .card-widget:hover 完全一致）：
+     悬停 → 粉描边 + 右下 4px 硬阴影 + 卡片向左上抬 2px
+
+   ⚠️ 用户明确要求"静止时不画边框，只在悬停时出现"。
+      所以悬停时**不能**用真的 border —— 那会让卡片在外框上多出 4px，
+      鼠标移入的瞬间整页布局都会抖一下。
+      改用 inset 内阴影画那圈线：视觉上一样，但完全不占尺寸。
+
+   ⚠️ 选择器和主题里 .cardHover 那一组保持一致，理由：
+      · #recent-posts .recent-post-item —— 首页与列表页的文章卡片
+      · .layout > div:first-child:not(.nc) —— 主内容大卡片（文章正文那个）
+     这两条正是主题给卡片加背景与阴影时用的判据，用同样的判据才不会漏或重。
+
+   ⚠️ 关于"正文大卡片也抬起来"：
+      用户在我提示"鼠标停在正文里阅读时它也会抬起"之后仍然选了它。
+      这里照做。如果实际读起来觉得晃，删掉本段第二个选择器即可。
+
+   ⚠️ 光标：
+      首页文章卡片是链接，给 cursor:pointer（ui-ux-pro-max「Hover States」：
+      "Do: Change cursor and add subtle visual change"）。
+      正文大卡片**不是**链接，所以**不给** pointer —— 否则是在骗点击。
+   --------------------------------------------------------------------------- */
+
+/* 悬停反馈：两条选择器合写，保证两者表现一模一样 */
+html:not([data-theme='dark']) #recent-posts .recent-post-item,
+html:not([data-theme='dark']) .layout > div:first-child:not(.nc) {
+  transition: box-shadow .22s ease, transform .22s ease;
+}
+
+html:not([data-theme='dark']) #recent-posts .recent-post-item:hover,
+html:not([data-theme='dark']) .layout > div:first-child:not(.nc):hover {
+  /* inset 画粉描边（不占尺寸），再用 4px 4px 的硬阴影做厚度 */
+  box-shadow: inset 0 0 0 2px #F79FDD,
+              4px 4px 0 0 #F79FDD;
+  transform: translate(-2px, -2px);
+}
+
+/* 只有可点的卡片才给手型光标 */
+html:not([data-theme='dark']) #recent-posts .recent-post-item {
+  cursor: pointer;
+}
+
+/* 减少动效：去掉位移与阴影位移，只留描边作为"这里被指到了"的反馈 */
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-theme='dark']) #recent-posts .recent-post-item,
+  html:not([data-theme='dark']) .layout > div:first-child:not(.nc) {
+    transition: box-shadow .22s ease;
+  }
+  html:not([data-theme='dark']) #recent-posts .recent-post-item:hover,
+  html:not([data-theme='dark']) .layout > div:first-child:not(.nc):hover {
+    box-shadow: inset 0 0 0 2px #F79FDD;
+    transform: none;
+  }
+}
