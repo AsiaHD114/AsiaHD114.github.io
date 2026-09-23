@@ -1211,32 +1211,18 @@ html:not([data-theme='dark']) #recent-posts .recent-post-item {
        底色压得足够浅，让深色标题稳稳达标。
    --------------------------------------------------------------------------- */
 
+/* ⚠️ 这里原本有两条规则，把 hero-back.webp 直接挂在首屏上（顶部 .55 白、底部 .90 粉），
+   外加一条 @media 窄屏版本。它们已删除，原因：
+     · 图片现在由 ⑳ 的 body::before 固定层承担，挂在首屏等于同一张图叠两次；
+     · 那条竖向渐变顶部是 rgba(255,250,252,.55)，也就是「55% 白」，
+       这正是用户指出的「顶部遮住壁纸的那片近白」；
+     · 它虽然被下面那条新规则覆盖，但 @media 窄屏版本没有被覆盖，
+       手机上首屏仍然是「白顶 + 图片」，所以必须一并删掉。
+   首屏现在的背景见本文件末尾 ⑳ 段末尾的 #page-header.full_page 规则：
+   顶部完全透明（让壁纸透出来），底部不透明 #FFB3EB（和波浪同色无缝相接）。 */
+
 /* 三层背景：从下往上依次是「图片 → 斜向粉色渐变 → 竖向渐隐」
    CSS 里 background-image 列表的第一个是最上面那层，所以顺序是反着写的 */
-html:not([data-theme='dark']) #page-header.full_page {
-  background-image:
-    /* ③ 最上层：竖向渐隐。顶部留白多一点保标题可读，底部渐到波浪的粉色，
-          这样图片向下自然过渡到波浪，不会有一条硬边 */
-    linear-gradient(180deg,
-      rgba(255, 250, 252, .55) 0%,
-      rgba(255, 246, 251, .58) 38%,
-      rgba(253, 239, 248, .74) 70%,
-      rgba(255, 179, 235, .90) 100%),
-    /* ② 中间层：原来是首屏自带的那层粉色渐变，保留下来，
-          改成斜向并带透明度，让图片整体偏粉、和站点同色系 */
-    linear-gradient(135deg,
-      rgba(255, 211, 240, .50) 0%,
-      rgba(255, 179, 235, .38) 48%,
-      rgba(253, 239, 248, .52) 100%),
-    /* ① 最下层：图片本身 */
-    url('/img/hero-back.webp');
-  background-size: cover, cover, cover;
-  /* 第三层用 center 24% 把画面往上提，避开把脸裁成一条 */
-  background-position: center top, center top, center 24%;
-  background-repeat: no-repeat, no-repeat, no-repeat;
-  /* 图片没加载出来时（慢网）先显示站点底色，不会闪白 */
-  background-color: #FFFAFC;
-}
 
 /* 标题改回白色（用户要求）。
    ----------------------------------------------------------------------------
@@ -1294,27 +1280,11 @@ html:not([data-theme='dark']) #page-header.full_page:not(.nav-fixed):not(.not-to
   color: #FDEFF8;
 }
 
-/* 窄屏：图片用 cover 会被裁得更狠，
-   把取景位置稍微下移一点，尽量保住脸；同时顶部遮罩再加厚一档保可读 */
-@media (max-width: 768px) {
-  html:not([data-theme='dark']) #page-header.full_page {
-    background-position: center top, center top, center 18%;
-  }
-  html:not([data-theme='dark']) #page-header.full_page {
-    background-image:
-      linear-gradient(180deg,
-        rgba(255, 250, 252, .62) 0%,
-        rgba(255, 246, 251, .62) 36%,
-        rgba(253, 239, 248, .76) 70%,
-        rgba(255, 179, 235, .90) 100%),
-      linear-gradient(135deg,
-        rgba(255, 211, 240, .50) 0%,
-        rgba(255, 179, 235, .38) 48%,
-        rgba(253, 239, 248, .52) 100%),
-      url('/img/hero-back.webp');
-  }
-}
-
+/* ⚠️ 这里原本是一个 @media (max-width: 768px) 块，用来微调首屏背景图的取景。
+   图片挪到 ⑳ 的 body::before 固定层后，这个块的内部规则被删除，
+   但**开头的 @media {... 忘了删** —— 结果它把紧随其后的整个 ⑳ 段
+   （包括新的 #page-header.full_page 渐变）全吞进了窄屏媒体查询里，
+   桌面上根本不会生效。已把悬空的开头移除。 */
 /* ---------------------------------------------------------------------------
    ⑳ 首页壁纸背景 —— 顶部清晰，下滑被页面底色盖住
    ----------------------------------------------------------------------------
