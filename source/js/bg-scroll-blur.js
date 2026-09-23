@@ -1,34 +1,42 @@
 /**
- * 整页背景的滚动模糊 —— 把滚动进度写进 CSS 变量
+ * 首页壁纸的滚动淡出 —— 把滚动进度写进 CSS 变量
  * ============================================================================
  * 做什么：
- *   配合 restyle.css 的 ⑳ 段。背景固定层用
- *       filter: blur(calc(9px * var(--bg-blur-progress, 0)))
- *   这个脚本负责把 --bg-blur-progress 从 0（页面顶部，背景清晰）
- *   逐渐写到 1（滚过约四分之三屏，背景达到最大模糊）。
+ *   配合 restyle.css 的 ⑳ 段。固定背景层用
+ *       opacity: calc(1 - var(--bg-fade, 0))
+ *       filter:  blur(calc(9px * var(--bg-fade, 0)))
+ *   这个脚本负责把 --bg-fade 从 0 写到 1：
+ *       0 = 刚进首页 → 壁纸完全可见、完全清晰
+ *       1 = 滑下去   → 壁纸完全透明，页面恢复成正常的淡粉白底
+ *
+ * 为什么是"淡出"而不是"一直留着变糊"：
+ *   最初参照 blog.fqzlr.top 做过"壁纸始终在底下、只随滚动变糊"的版本，
+ *   但用户的诉求是「再往下移动就是原本白色挡住壁纸了，刚进博客时壁纸应该清晰」，
+ *   也就是壁纸只属于首屏，滚下去就该让位给正常白底。
+ *   所以这里让同一个进度同时驱动透明度和模糊 —— 观感是「清晰 → 发糊 → 消失」。
  *
  * 为什么用 JS 而不是纯 CSS：
- *   CSS 本身拿不到"滚动进度"这个值（scroll-driven animations 目前只有
- *   Chromium 支持，Safari/Firefox 都还不行）。参考站也是用 JS 写变量的。
+ *   CSS 拿不到"滚动进度"这个值（scroll-driven animations 目前只有 Chromium 支持）。
  *
  * 性能上的做法：
  *   · scroll 回调里**不直接**改样式，只置一个标记并请求一帧，
- *     真正的计算放在 requestAnimationFrame 里 —— 避免滚动时每帧多次写样式
+ *     真正的计算放在 requestAnimationFrame 里 —— 避免滚动时一帧多次写样式
  *   · passive: true —— 不阻塞滚动
  *   · 进度变化小于 0.01 就跳过写入 —— 省掉大量无意义的样式重算
- *   · will-change: filter 已在 CSS 里声明，让浏览器把背景层单独提成合成层
+ *   · will-change 已在 CSS 里声明，让浏览器把背景层单独提成合成层
  *
  * 无障碍：
- *   系统开启「减少动效」时**整个脚本不启动**，由 CSS 给一个固定的 6px 模糊。
- *   滚动联动的模糊属于"非用户触发的装饰性动效"，本来就该让位。
+ *   系统开启「减少动效」时 CSS 那边把 filter 关掉，但**这里仍然照常写
+ *   --bg-fade** —— 因为淡出不是装饰，它决定壁纸该不该盖住内容。
+ *   不写的话滚下去壁纸会一直糊在正文后面，那才是真正的干扰。
  *
  * 非首页：
- *   参考站里非首页的背景是一开始就模糊的。这里照做 ——
- *   不是首页就直接写死 0.55，不挂 scroll 监听，省掉一份开销。
+ *   直接写 --bg-fade: 1（壁纸不显示），也不挂 scroll 监听。
  *   判断依据是页面上有没有 #page-header.full_page（Butterfly 只在首页给这个类）。
+ *   这些页面没有首屏大图，壁纸会直接顶在内容后面，不如不显示。
  *
  * ⚠️ 与 asset-version.js 的关系：
- *    这个文件也要列进 scripts/asset-version.js 的 LOCAL_ASSETS，
+ *    这个文件已列进 scripts/asset-version.js 的 LOCAL_ASSETS，
  *    否则它拿不到 ?v= 防缓存标识，改完用户看不到变化。
  * ============================================================================
  */
@@ -37,19 +45,16 @@
 
   var root = document.documentElement;
 
-  /* 减少动效：交给 CSS 的静态模糊，这里直接退出 */
-  var mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
-  if (mq && mq.matches) return;
-
-  /* 非首页：直接给一个固定的轻模糊，不挂滚动监听 */
+  /* 非首页：壁纸不显示，也不挂滚动监听 */
   var hero = document.querySelector('#page-header.full_page');
   if (!hero) {
-    root.style.setProperty('--bg-blur-progress', '0.55');
+    root.style.setProperty('--bg-fade', '1');
     return;
   }
 
-  var MAX_SCROLL_RATIO = 0.75;   /* 滚过 0.75 屏就到达最大模糊 */
-  var MIN_DELTA = 0.01;          /* 进度变化小于这个值就不写 */
+  /* 滚过 0.6 屏就完全淡出 —— 大约是第一张内容卡片进入视口的位置 */
+  var MAX_SCROLL_RATIO = 0.6;
+  var MIN_DELTA = 0.01;
 
   var ticking = false;
   var last = -1;
@@ -65,7 +70,7 @@
 
     if (Math.abs(p - last) < MIN_DELTA) return;
     last = p;
-    root.style.setProperty('--bg-blur-progress', p.toFixed(3));
+    root.style.setProperty('--bg-fade', p.toFixed(3));
   }
 
   function onScroll() {
@@ -75,8 +80,8 @@
   }
 
   window.addEventListener('scroll', onScroll, { passive: true });
-  /* 窗口尺寸变化会改变换算基准，重算一次 */
   window.addEventListener('resize', onScroll, { passive: true });
 
-  compute();   /* 首屏同步给一次，避免刷新后停在中间位置时模糊量不对 */
+  /* 首屏同步给一次：刷新后停在页面中间时，壁纸不该还亮着 */
+  compute();
 })();

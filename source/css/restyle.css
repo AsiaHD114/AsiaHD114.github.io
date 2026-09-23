@@ -1296,40 +1296,44 @@ html:not([data-theme='dark']) #page-header.full_page #nav a:hover {
   }
 }
 
+
 /* ---------------------------------------------------------------------------
-   ⑳ 整页固定背景 —— 壁纸铺满全站，滚动时逐渐模糊
+   ⑳ 首页壁纸背景 —— 顶部清晰，下滑被页面底色盖住
    ----------------------------------------------------------------------------
-   用户要求："将壁纸填充进整个背景里，怎么下滑都可以看到，但下滑会进行模糊处理"，
-   并给了参考站 https://blog.fqzlr.top/
+   这一段的来历（两轮改动，别把结论弄反）：
 
-   扒了参考站的 CSS，它的做法是（原文摘录）：
-     .banner-stage        { position: fixed; inset: 0; height: 100vh; height: 100lvh;
-                            z-index: -1; pointer-events: none }
-     .banner-stage__image { filter: blur(var(--overlay-blur, 0px)); transform: scale(1.05) }
-     body[data-current-page=home] .banner-stage__image {
-                            filter: blur(calc(var(--overlay-blur, 0px) * var(--wallpaper-blur-progress, 0))) }
+     第一轮，用户要求："将壁纸填充进整个背景里，怎么下滑都可以看到，
+                         但下滑会进行模糊处理"，并给了参考站 blog.fqzlr.top
+     → 照参考站做了 position:fixed 的整页层 + blur 随滚动增长。
+       参考站那套（原文 .banner-stage / .banner-stage__image）只负责"变糊"，
+       壁纸**始终留在底下**。
 
-   三个要点，这里一一对应：
-     ① 固定层用 position:fixed + z-index:-1，不用 background-attachment:fixed
-        —— 后者在 iOS Safari 上基本是坏的，而且滚动时抖动。
-     ② 模糊 = 基准值 × 滚动进度。进度是 JS 写进 --bg-blur-progress 的 0→1。
-     ③ 固定层整体 scale(1.06) —— 模糊会把边缘"吃"进去，放大一点才不会露出底色。
+     第二轮，用户纠正："这里改错了，我不要求像参考网站那样，再往下移动就是
+                       原本白色挡住壁纸了，然后刚进博客时壁纸应该清晰"
+     → 也就是要的时序是：
+         · 刚进首页   → 壁纸**清晰**
+         · 往下滑     → 壁纸逐渐被页面本来的淡粉白底盖住
+         · 到内容区   → 正常的白底页面，**看不到壁纸**
+
+   实现：固定层位置不动，把它的 **opacity** 绑到滚动进度上 ——
+       opacity: calc(1 - var(--bg-fade))
+     进度 0 时不透明（清晰可见），进度 1 时完全透明（等于没有）。
+     模糊仍然绑同一个变量，所以观感是「清晰 → 发糊 → 消失」，
+     底部不会残留一层看得见的壁纸。
+
+   ⚠️ 只用在首页。其它页面由 JS 直接写 --bg-fade: 1（壁纸一律不显示）——
+      那些页面没有首屏大图，壁纸会直接顶在内容后面，不如不显示。
+
+   ⚠️ 与 ⑲ 的关系：⑲ 把图放在 #page-header.full_page 上（只有首页首屏），
+      这一版升到整页固定层，所以 ⑲ 那层背景必须撤掉，否则同一张图叠两次。
+      渐变没有丢，只是从首屏挪到了固定层上。
 
    ⚠️ 一个必须做的配套改动：
       body 原本有不透明底色，会把 z-index:-1 的固定层整个盖住。
       所以把底色挪到 html 上，body 设为透明，固定层才看得见。
 
-   ⚠️ 与 ⑲ 的关系：
-      ⑲ 把图片放在 #page-header.full_page 上（只有首页首屏）。
-      这一版图片升到整页固定层，所以 ⑲ 的那层背景必须撤掉，否则同一张图会叠两次。
-      渐变没有丢，只是从首屏挪到了固定层上。
-
-   ⚠️ 默认给非首页一个固定模糊值：
-      参考站里，非首页的壁纸是**一直模糊**的（filter: blur(var(--overlay-blur))），
-      只有首页会从清晰开始、随滚动变糊。这里照做，由 JS 判断当前是不是首页。
-
-   ⚠️ 底层卡片仍是**不透明**的白：壁纸只在卡片周围与页面留白处透出来。
-      这是有意的 —— 让正文压在壁纸上会直接违反 ui-ux-pro-max 里
+   ⚠️ 中间那些不透明的白卡片不动：壁纸只在卡片周围与页面留白处透出来。
+      让正文压在壁纸上会直接违反 ui-ux-pro-max
       「Color Contrast：正文至少 4.5:1」那条 High 级要求。
    --------------------------------------------------------------------------- */
 
@@ -1350,7 +1354,7 @@ html:not([data-theme='dark']) body::before {
   z-index: -1;
   pointer-events: none;
   background-image:
-    /* 上层：竖向渐隐，保住首屏标题可读，并向下过渡到波浪的粉色 */
+    /* 上层：竖向渐隐，保住首屏标题可读，向下过渡到波浪的粉色 */
     linear-gradient(180deg,
       rgba(255, 250, 252, .42) 0%,
       rgba(255, 246, 251, .34) 30%,
@@ -1369,10 +1373,14 @@ html:not([data-theme='dark']) body::before {
   background-color: #FFFAFC;
   /* 模糊会把边缘吃进去，放大一点盖住 */
   transform: scale(1.06);
-  /* 模糊量 = 基准 9px × 滚动进度（--bg-blur-progress 由 JS 写 0→1） */
-  filter: blur(calc(9px * var(--bg-blur-progress, 0)));
-  /* 让浏览器把它单独放到一个合成层，滚动时只重算这一层 */
-  will-change: filter;
+  /* 滚动进度（JS 写 --bg-fade）：
+       0 = 刚进页面 → 完全可见、完全清晰
+       1 = 滑下去   → 完全透明，等于没有这张图
+     同一变量也驱动模糊，所以是「清晰 → 发糊 → 消失」 */
+  opacity: calc(1 - var(--bg-fade, 0));
+  filter: blur(calc(9px * var(--bg-fade, 0)));
+  /* 单独提成合成层，滚动时不重排 */
+  will-change: opacity, filter;
 }
 
 /* 撤掉 ⑲ 放在首屏上的那层图，把画面让给固定层 */
@@ -1381,34 +1389,36 @@ html:not([data-theme='dark']) #page-header.full_page {
   background-color: transparent;
 }
 
-/* 首屏底部一条渐隐，让固定层自然过渡到波浪，不留硬边 */
+/* 首屏底部一条很轻的渐隐，让首屏和波浪之间不出现硬边。
+   注意：不能太重 —— 用户在顶部时壁纸必须是"清晰"的。 */
 html:not([data-theme='dark']) #page-header.full_page::after {
   content: '';
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 38%;
+  height: 26%;
   pointer-events: none;
   background: linear-gradient(180deg,
     rgba(255, 250, 252, 0) 0%,
-    rgba(253, 239, 248, .32) 55%,
-    rgba(255, 179, 235, .70) 100%);
+    rgba(253, 239, 248, .18) 60%,
+    rgba(255, 179, 235, .45) 100%);
 }
 
-/* 窄屏：画面裁得更狠，取景往下一点，别把脸切掉 */
+/* 窄屏：画面裁得更狠，取景往下一点别把脸切掉；模糊基准也降一档省性能 */
 @media (max-width: 768px) {
   html:not([data-theme='dark']) body::before {
     background-position: center top, center top, center 22%;
-    filter: blur(calc(7px * var(--bg-blur-progress, 0)));
+    filter: blur(calc(7px * var(--bg-fade, 0)));
   }
 }
 
-/* 减少动效：不做滚动联动，固定给一个轻模糊，
-   保证"背景是背景、内容是内容"的层次仍然成立 */
+/* 减少动效：不做滚动联动。
+   直接给一个固定状态 —— 首屏清晰（不模糊），下滑时由 JS 写的进度仍会淡出，
+   只是不再叠加模糊动画。这样既尊重偏好，也不会让壁纸一直糊在那里。 */
 @media (prefers-reduced-motion: reduce) {
   html:not([data-theme='dark']) body::before {
-    filter: blur(6px);
-    will-change: auto;
+    filter: none;
+    will-change: opacity;
   }
 }
