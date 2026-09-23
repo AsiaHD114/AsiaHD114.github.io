@@ -2,11 +2,11 @@
 title: 记一次随机分块传输实验
 date: 2026-09-23 21:30:00
 categories:
-  - [技术, web]
-tags: [WAF, Yakit, 分块传输, 安全]
+  - [技术, 安全]
+tags: [WAF, 安全]
 ---
 
-在绕过 WAF（Web 应用防火墙）的各种技术里，**随机分块传输编码（Random Chunked Transfer Encoding）**是一个值得关注的方法。
+在绕过 WAF（Web 应用防火墙）的各种技术里，**随机分块传输编码**（Random Chunked Transfer Encoding）是一个值得关注的方法。
 
 它的核心思路是把请求数据拆成许多**大小随机**的「块」，让那些需要拿到完整数据包才能有效检测的安全设备失去判断依据。
 
