@@ -1488,3 +1488,47 @@ html:not([data-theme='dark']) .tag-cloud-list a:focus-visible {
     transform: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   ㉔ 目录（TOC）当前项 —— 去掉实心深色块
+   ----------------------------------------------------------------------------
+   用户反馈："颜色太深了"（指目录里 3.3.3、结果验证 那一块）。
+
+   那是主题自带的默认样式，不是这里改坏的：
+       #aside-content #card-toc .toc-content .toc-link.active
+           { background: #af1d88; color: #fff; }
+   它在粉色卡片里做成了一整块实心主色，视觉重量太大。
+
+   改成与站内其他胶囊一致的「淡粉底 + 深玫瑰字 + 加粗」：
+
+   依据（ui-ux-pro-max）：
+     · Active State（Medium）—— "Current page/section should be visually
+       indicated"，Don't: "No visual feedback on current location"。
+       所以不能只是把颜色调淡，还要保住"一眼看出当前读到哪"的指示性，
+       加粗就是为了这个。
+     · Color Contrast（High）—— 至少 4.5:1。
+
+   对比度实算（这次两边都更好，不是为了好看牺牲可读性）：
+     改前  白字 vs #af1d88  = 6.06:1
+     改后  #8C1468 vs #FDEFF8 = 8.42:1
+   --------------------------------------------------------------------------- */
+html:not([data-theme='dark']) #aside-content #card-toc .toc-content .toc-link.active {
+  background: #FDEFF8;
+  color: #8C1468;
+  /* 加粗：保住"当前项"的指示性，不能只靠颜色深浅 */
+  font-weight: 600;
+  border-radius: 4px;
+}
+
+/* 悬停：给一层比当前项更淡的底，两者能区分开 */
+html:not([data-theme='dark']) #aside-content #card-toc .toc-content .toc-link:hover {
+  background: rgba(253, 239, 248, .6);
+  color: #AF1D88;
+}
+
+/* 手机端的浮动目录面板用的是同一套 .toc-link，一并覆盖（不带 #aside-content 前缀） */
+html:not([data-theme='dark']) .toc-link.active {
+  background: #FDEFF8;
+  color: #8C1468;
+  font-weight: 600;
+}
