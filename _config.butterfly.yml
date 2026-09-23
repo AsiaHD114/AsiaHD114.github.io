@@ -1141,6 +1141,9 @@ inject:
     # 首页站点标题的打字机效果。脚本自己判断是不是首页（.full_page），
     # 其他页面的 #site-title 内容是「关于笔者」「归档」等，不参与打字。
     - <script src="/js/hero-typing.js"></script>
+    # 整页固定背景的滚动模糊：把滚动进度写进 --bg-blur-progress。
+    # 脚本自己判断是不是首页；非首页给固定模糊值，不挂 scroll 监听。
+    - <script src="/js/bg-scroll-blur.js"></script>
     # 看板娘（OhMyLive2D）。这里只引一个约 4 KB 的引导脚本，
     # 真正的库 /js/oml2d.min.js（979 KB）由它自己在空闲时动态加载，
     # 所以不会进入首屏关键路径。库与模型均为自建，不依赖外部 CDN。

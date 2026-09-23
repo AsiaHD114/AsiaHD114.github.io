@@ -1278,3 +1278,120 @@ html:not([data-theme='dark']) #page-header.full_page #nav a:hover {
       url('/img/hero-back.webp');
   }
 }
+
+/* ---------------------------------------------------------------------------
+   ⑳ 整页固定背景 —— 壁纸铺满全站，滚动时逐渐模糊
+   ----------------------------------------------------------------------------
+   用户要求："将壁纸填充进整个背景里，怎么下滑都可以看到，但下滑会进行模糊处理"，
+   并给了参考站 https://blog.fqzlr.top/
+
+   扒了参考站的 CSS，它的做法是（原文摘录）：
+     .banner-stage        { position: fixed; inset: 0; height: 100vh; height: 100lvh;
+                            z-index: -1; pointer-events: none }
+     .banner-stage__image { filter: blur(var(--overlay-blur, 0px)); transform: scale(1.05) }
+     body[data-current-page=home] .banner-stage__image {
+                            filter: blur(calc(var(--overlay-blur, 0px) * var(--wallpaper-blur-progress, 0))) }
+
+   三个要点，这里一一对应：
+     ① 固定层用 position:fixed + z-index:-1，不用 background-attachment:fixed
+        —— 后者在 iOS Safari 上基本是坏的，而且滚动时抖动。
+     ② 模糊 = 基准值 × 滚动进度。进度是 JS 写进 --bg-blur-progress 的 0→1。
+     ③ 固定层整体 scale(1.06) —— 模糊会把边缘"吃"进去，放大一点才不会露出底色。
+
+   ⚠️ 一个必须做的配套改动：
+      body 原本有不透明底色，会把 z-index:-1 的固定层整个盖住。
+      所以把底色挪到 html 上，body 设为透明，固定层才看得见。
+
+   ⚠️ 与 ⑲ 的关系：
+      ⑲ 把图片放在 #page-header.full_page 上（只有首页首屏）。
+      这一版图片升到整页固定层，所以 ⑲ 的那层背景必须撤掉，否则同一张图会叠两次。
+      渐变没有丢，只是从首屏挪到了固定层上。
+
+   ⚠️ 默认给非首页一个固定模糊值：
+      参考站里，非首页的壁纸是**一直模糊**的（filter: blur(var(--overlay-blur))），
+      只有首页会从清晰开始、随滚动变糊。这里照做，由 JS 判断当前是不是首页。
+
+   ⚠️ 底层卡片仍是**不透明**的白：壁纸只在卡片周围与页面留白处透出来。
+      这是有意的 —— 让正文压在壁纸上会直接违反 ui-ux-pro-max 里
+      「Color Contrast：正文至少 4.5:1」那条 High 级要求。
+   --------------------------------------------------------------------------- */
+
+/* 底色挪到 html，body 让位给固定层 */
+html:not([data-theme='dark']) {
+  background-color: #FFFAFC;
+}
+html:not([data-theme='dark']) body {
+  background-color: transparent;
+}
+
+/* 整屏固定的背景层。用 body::before 而不是注入 div：
+   不依赖 JS，也不改动主题模板。 */
+html:not([data-theme='dark']) body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    /* 上层：竖向渐隐，保住首屏标题可读，并向下过渡到波浪的粉色 */
+    linear-gradient(180deg,
+      rgba(255, 250, 252, .42) 0%,
+      rgba(255, 246, 251, .34) 30%,
+      rgba(253, 239, 248, .40) 68%,
+      rgba(255, 179, 235, .58) 100%),
+    /* 中层：原来的斜向粉色渐变，保留，让整张图偏粉、和站点同色系 */
+    linear-gradient(135deg,
+      rgba(255, 211, 240, .42) 0%,
+      rgba(255, 179, 235, .30) 48%,
+      rgba(253, 239, 248, .44) 100%),
+    /* 底层：图片 */
+    url('/img/hero-back.webp');
+  background-size: cover, cover, cover;
+  background-position: center top, center top, center 30%;
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  background-color: #FFFAFC;
+  /* 模糊会把边缘吃进去，放大一点盖住 */
+  transform: scale(1.06);
+  /* 模糊量 = 基准 9px × 滚动进度（--bg-blur-progress 由 JS 写 0→1） */
+  filter: blur(calc(9px * var(--bg-blur-progress, 0)));
+  /* 让浏览器把它单独放到一个合成层，滚动时只重算这一层 */
+  will-change: filter;
+}
+
+/* 撤掉 ⑲ 放在首屏上的那层图，把画面让给固定层 */
+html:not([data-theme='dark']) #page-header.full_page {
+  background-image: none;
+  background-color: transparent;
+}
+
+/* 首屏底部一条渐隐，让固定层自然过渡到波浪，不留硬边 */
+html:not([data-theme='dark']) #page-header.full_page::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 38%;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    rgba(255, 250, 252, 0) 0%,
+    rgba(253, 239, 248, .32) 55%,
+    rgba(255, 179, 235, .70) 100%);
+}
+
+/* 窄屏：画面裁得更狠，取景往下一点，别把脸切掉 */
+@media (max-width: 768px) {
+  html:not([data-theme='dark']) body::before {
+    background-position: center top, center top, center 22%;
+    filter: blur(calc(7px * var(--bg-blur-progress, 0)));
+  }
+}
+
+/* 减少动效：不做滚动联动，固定给一个轻模糊，
+   保证"背景是背景、内容是内容"的层次仍然成立 */
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-theme='dark']) body::before {
+    filter: blur(6px);
+    will-change: auto;
+  }
+}
