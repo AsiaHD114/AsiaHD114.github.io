@@ -1429,3 +1429,62 @@ html:not([data-theme='dark']) #content-inner {
     will-change: opacity;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   ㉓ 标签页（/tags/）的药丸配色 —— 对齐站点粉色系
+   ----------------------------------------------------------------------------
+   用户反馈："这个颜色不符合主题"。
+   原因：themes/butterfly/scripts/helpers/page.js 里，cloudTags 在
+   **没有** custom_colors 时会调 getRandomColor()，给每个标签随机一个颜色。
+   实测本站被分到 rgb(52,50,171) 靛蓝、rgb(153,50,88) 暗红 —— 和粉色系完全不搭。
+
+   处理分两层：
+     ① 配色：在 source/tags/index.md 的 front-matter 里配 custom_colors，
+        给一组浅粉。这是主题原生入口，不用 !important 去压内联样式。
+     ② 外观：在这里把药丸的样子对齐侧栏标签云（同一套圆角/描边/悬停），
+        让两处观感一致。
+
+   ⚠️ 选择器要写两个：
+      配了 custom_colors 的标签带 class="tag-cloud-item"，
+      没配的**没有**这个类（源码里两个分支不一样）。
+      只写一个会漏掉一半情况。
+
+   ⚠️ 文字色必须**显式指定**：
+      .tag-cloud-list a 本身没有 color，是继承来的，不可靠。
+      这里定为 #8C1468（深玫瑰）。
+      对比度：#8C1468 vs 最深的药丸底色 #F79FDD ≈ 6.3:1，达标。
+
+   ⚠️ 不去动 font-size：主题按标签文章数给不同字号（1.2em~1.5em），
+      那是有意义的信息，不是装饰。
+   --------------------------------------------------------------------------- */
+html:not([data-theme='dark']) .tag-cloud-list a {
+  color: #8C1468;
+  border: 1px solid #FBD4EE;
+  border-radius: 25px;
+  padding: 3px 14px;
+  transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
+}
+
+/* 悬停：和侧栏标签云同一套反馈 */
+html:not([data-theme='dark']) .tag-cloud-list a:hover {
+  border-color: #F79FDD;
+  box-shadow: 2px 2px 0 0 #F79FDD;
+  transform: translate(-1px, -1px);
+}
+
+/* 键盘焦点：主题在这一块没有明显焦点环，补一个 */
+html:not([data-theme='dark']) .tag-cloud-list a:focus-visible {
+  outline: 2px solid #AF1D88;
+  outline-offset: 2px;
+}
+
+/* 减少动效：去掉位移与阴影位移 */
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-theme='dark']) .tag-cloud-list a {
+    transition: border-color .25s ease;
+  }
+  html:not([data-theme='dark']) .tag-cloud-list a:hover {
+    box-shadow: none;
+    transform: none;
+  }
+}
