@@ -1238,24 +1238,41 @@ html:not([data-theme='dark']) #page-header.full_page {
   background-color: #FFFAFC;
 }
 
-/* ⚠️ 标题必须改深色 —— 原样式是 #page-header #site-title { color: var(--white) }，
-   白字压在淡粉或图片上都读不清（白 vs #FFB3EB 只有 1.63:1）。
-   这条我提过几次都没动，现在上了背景图，它就是功能必需而不是配色偏好。 */
+/* 标题改回白色（用户要求）。
+   ----------------------------------------------------------------------------
+   ⚠️ 代价必须记录在案：
+      白色 vs 现在这层「图片 + 双层渐变」混合后的淡粉背景，
+      对比度只有约 1.1 ~ 1.6 : 1，远低于 ui-ux-pro-max 里
+      「Color Contrast：正文至少 4.5:1」（High 级）的要求。
+      也就是说：**这条规则是明知不达标、按用户明确要求保留的。**
+
+   缓解手段：给它加一层「深玫瑰 + 深洋红」的多层投影。
+      这是白字压在浅色底上的标准做法 —— 白字本身低对比，
+      但投影在字周围造出一圈暗边，笔画因此有边界、读得出来。
+      用品牌色系的深色（#8C1468 / #661A52）而不是纯黑，
+      是为了不破坏整体偏粉的调子。
+   ---------------------------------------------------------------------------- */
 html:not([data-theme='dark']) #page-header #site-title {
-  color: #661A52;
-  /* 一层很淡的白光晕，让笔画在图片纹理上仍有边界；
-     用白色而不是深色阴影，是为了保持"轻盈融进背景"的感觉 */
-  text-shadow: 0 1px 10px rgba(255, 255, 255, .8);
+  color: #FFFFFF;
+  text-shadow:
+    0 1px 2px rgba(102, 26, 82, .55),
+    0 2px 8px rgba(140, 20, 104, .45),
+    0 4px 20px rgba(140, 20, 104, .28);
 }
 
-/* 首页导航栏也是浮在这张图上的，文字同样要压得住。
-   只作用于 full_page（首页），别的页面导航不受影响。 */
+/* 首页导航栏：文字和标题是同一串（AsiaHD's blog），底色也是同一张图，
+   所以一起改回白色，否则同屏出现一白一深会很怪。
+   投影比标题轻一档 —— 导航字号小、位置靠上，太重会糊。
+   ⚠️ 只作用于 full_page（首页），别的页面导航不受影响。 */
 html:not([data-theme='dark']) #page-header.full_page #nav .site-name,
 html:not([data-theme='dark']) #page-header.full_page #nav a {
-  color: #661A52;
+  color: #FFFFFF;
+  text-shadow:
+    0 1px 2px rgba(102, 26, 82, .5),
+    0 2px 6px rgba(140, 20, 104, .35);
 }
 html:not([data-theme='dark']) #page-header.full_page #nav a:hover {
-  color: #AF1D88;
+  color: #FDEFF8;
 }
 
 /* 窄屏：图片用 cover 会被裁得更狠，
