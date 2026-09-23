@@ -1301,13 +1301,9 @@ html:not([data-theme='dark']) #page-header #site-title {
       「Color Contrast：正文至少 4.5:1」那条 High 级要求。
    --------------------------------------------------------------------------- */
 
-/* 底色挪到 html，body 让位给固定层 */
-html:not([data-theme='dark']) {
-  background-color: #FFFAFC;
-}
-html:not([data-theme='dark']) body {
-  background-color: transparent;
-}
+/* ⚠️ 这里原本把站点底色挪到 html、并把 body 设成透明，是为了让
+   z-index:-1 的固定壁纸层能被看见。改用 clip-path 之后壁纸只在首屏那一段
+   存在，内容区底下就是页面本身的底色，不再需要这组魔改，已还原成主题默认。 */
 
 /* 整屏固定的背景层。用 body::before 而不是注入 div：
    不依赖 JS，也不改动主题模板。 */
