@@ -1181,3 +1181,100 @@ html:not([data-theme='dark']) #recent-posts .recent-post-item {
     transform: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   ⑲ 首页首屏背景图 —— back.jpg（波奇酱插画），用透明粉色渐变"融进"页面
+   ----------------------------------------------------------------------------
+   用户要求："将我发你的图（back）插入到我所截图的地方，要求融入背景，
+             保留那些透明的渐变"
+
+   拆成三个具体决定：
+     ① 插到哪 —— 首页首屏 #page-header.full_page。
+        实测首页的容器就是 <header class="full_page" id="page-header">，
+        内页的 header 没有 full_page 类，所以这条规则天然只作用于首页。
+     ② 怎么"融入" —— 不是把图直接铺上去，而是**叠在两层透明粉色渐变下面**。
+        图片本身是饱和度很高的粉色，直接铺会让首屏比整站艳一档，
+        而且压在下面的波奇酱的脸会被裁成一条。两层渐变把它压成"底色"。
+     ③ "保留透明的渐变" —— 原来首屏那层粉色渐变**没有删**，而是变成了
+        叠在图片上方的第一层（见下）。波浪那三层是独立元素，完全没动。
+
+   图片：source/img/hero-back.webp
+     原图 2526x1660 JPEG 376.8 KB → 1920x1262 WebP 137.7 KB（省 63%）
+     选 WebP 是因为 ui-ux-pro-max「Performance」那条要求用 WebP/AVIF。
+
+   对比度（skill 里两条 High 级都指这件事）：
+     · "Text must be readable against background, minimum 4.5:1"
+     · "Use darker text on light backgrounds"
+     → 所以标题必须从白色改成深色。白色在 #FFB3EB 上只有 1.63:1，
+       叠了图片之后只会更差；#661A52 在淡粉上约 7~11:1。
+       顶部那层渐变的白色部分给到 .55，就是为了把标题所在区域的
+       底色压得足够浅，让深色标题稳稳达标。
+   --------------------------------------------------------------------------- */
+
+/* 三层背景：从下往上依次是「图片 → 斜向粉色渐变 → 竖向渐隐」
+   CSS 里 background-image 列表的第一个是最上面那层，所以顺序是反着写的 */
+html:not([data-theme='dark']) #page-header.full_page {
+  background-image:
+    /* ③ 最上层：竖向渐隐。顶部留白多一点保标题可读，底部渐到波浪的粉色，
+          这样图片向下自然过渡到波浪，不会有一条硬边 */
+    linear-gradient(180deg,
+      rgba(255, 250, 252, .55) 0%,
+      rgba(255, 246, 251, .58) 38%,
+      rgba(253, 239, 248, .74) 70%,
+      rgba(255, 179, 235, .90) 100%),
+    /* ② 中间层：原来是首屏自带的那层粉色渐变，保留下来，
+          改成斜向并带透明度，让图片整体偏粉、和站点同色系 */
+    linear-gradient(135deg,
+      rgba(255, 211, 240, .50) 0%,
+      rgba(255, 179, 235, .38) 48%,
+      rgba(253, 239, 248, .52) 100%),
+    /* ① 最下层：图片本身 */
+    url('/img/hero-back.webp');
+  background-size: cover, cover, cover;
+  /* 第三层用 center 24% 把画面往上提，避开把脸裁成一条 */
+  background-position: center top, center top, center 24%;
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  /* 图片没加载出来时（慢网）先显示站点底色，不会闪白 */
+  background-color: #FFFAFC;
+}
+
+/* ⚠️ 标题必须改深色 —— 原样式是 #page-header #site-title { color: var(--white) }，
+   白字压在淡粉或图片上都读不清（白 vs #FFB3EB 只有 1.63:1）。
+   这条我提过几次都没动，现在上了背景图，它就是功能必需而不是配色偏好。 */
+html:not([data-theme='dark']) #page-header #site-title {
+  color: #661A52;
+  /* 一层很淡的白光晕，让笔画在图片纹理上仍有边界；
+     用白色而不是深色阴影，是为了保持"轻盈融进背景"的感觉 */
+  text-shadow: 0 1px 10px rgba(255, 255, 255, .8);
+}
+
+/* 首页导航栏也是浮在这张图上的，文字同样要压得住。
+   只作用于 full_page（首页），别的页面导航不受影响。 */
+html:not([data-theme='dark']) #page-header.full_page #nav .site-name,
+html:not([data-theme='dark']) #page-header.full_page #nav a {
+  color: #661A52;
+}
+html:not([data-theme='dark']) #page-header.full_page #nav a:hover {
+  color: #AF1D88;
+}
+
+/* 窄屏：图片用 cover 会被裁得更狠，
+   把取景位置稍微下移一点，尽量保住脸；同时顶部遮罩再加厚一档保可读 */
+@media (max-width: 768px) {
+  html:not([data-theme='dark']) #page-header.full_page {
+    background-position: center top, center top, center 18%;
+  }
+  html:not([data-theme='dark']) #page-header.full_page {
+    background-image:
+      linear-gradient(180deg,
+        rgba(255, 250, 252, .62) 0%,
+        rgba(255, 246, 251, .62) 36%,
+        rgba(253, 239, 248, .76) 70%,
+        rgba(255, 179, 235, .90) 100%),
+      linear-gradient(135deg,
+        rgba(255, 211, 240, .50) 0%,
+        rgba(255, 179, 235, .38) 48%,
+        rgba(253, 239, 248, .52) 100%),
+      url('/img/hero-back.webp');
+  }
+}
