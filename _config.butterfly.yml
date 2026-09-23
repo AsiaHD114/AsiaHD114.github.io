@@ -29,6 +29,7 @@ menu:
     归档: /archives/ || fas fa-archive
     分类: /categories/ || fas fa-folder-open
     标签: /tags/ || fas fa-tags
+    相册: /album/ || fas fa-images
   友链: /link/ || fas fa-link
   聊天喵: /message/ || fas fa-paper-plane
   关于笔者: /about/ || fas fa-heart
