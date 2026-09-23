@@ -1244,6 +1244,12 @@ html:not([data-theme='dark']) #page-header #site-title {
     0 1px 2px rgba(102, 26, 82, .55),
     0 2px 8px rgba(140, 20, 104, .45),
     0 4px 20px rgba(140, 20, 104, .28);
+  /* 往下滑时淡出并轻微上移 —— 对齐参考站 blog.fqzlr.top 的手感。
+     --title-fade 由 bg-scroll-blur.js 写，滚过首屏高度的 35% 就淡完，
+     比背景模糊快得多，所以标题会"先走一步"。 */
+  opacity: calc(1 - var(--title-fade, 0));
+  transform: translateY(calc(-14px * var(--title-fade, 0)));
+  will-change: opacity, transform;
 }
 
 /* ⚠️ 这里原本有一段「首页导航栏用白字 + 深玫瑰投影」的覆盖，已整段删除。
@@ -1413,3 +1419,13 @@ html:not([data-theme='dark']) #content-inner {
    壁纸根本透不出来 —— 那条规则多余，而且会把有意的深色页脚改成淡粉。
    用户只要求内容区挡住壁纸，页脚不在范围内。 */
 
+
+/* 减少动效（ui-ux-pro-max「Motion Sensitivity」High 级）：
+   标题的**位移**属于运动，关掉；淡出属于状态切换，保留。
+   页面滚动本身没有被拦截，不存在 scroll-jacking。 */
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-theme='dark']) #page-header #site-title {
+    transform: none;
+    will-change: opacity;
+  }
+}
