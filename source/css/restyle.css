@@ -1260,18 +1260,37 @@ html:not([data-theme='dark']) #page-header #site-title {
     0 4px 20px rgba(140, 20, 104, .28);
 }
 
-/* 首页导航栏：文字和标题是同一串（AsiaHD's blog），底色也是同一张图，
-   所以一起改回白色，否则同屏出现一白一深会很怪。
-   投影比标题轻一档 —— 导航字号小、位置靠上，太重会糊。
-   ⚠️ 只作用于 full_page（首页），别的页面导航不受影响。 */
-html:not([data-theme='dark']) #page-header.full_page #nav .site-name,
-html:not([data-theme='dark']) #page-header.full_page #nav a {
+/* 首页导航栏：文字和标题压在同一个背景上，所以一起用白字 + 深玫瑰投影。
+   ----------------------------------------------------------------------------
+   ⚠️ 三个必须的限定，少一个都会出问题：
+
+     ① 必须带上 span.site-page。
+        导航项不全是 <a>：主页/友链/关于是 <a class="site-page">，
+        而「博文」下拉和「搜索」是 <span class="site-page">。
+        上一版只写 #nav a，结果一半白一半深（用户反馈"顶部颜色不统一"）。
+
+     ② 必须排除 .child。
+        下拉菜单展开后，里面的条目是 <a class="site-page child">，
+        它们浮在**白色**下拉面板上 —— 变白就什么都看不见了。
+
+     ③ 必须排除 .nav-fixed 与 .not-top-img。
+        Butterfly 在滚动后会给 #page-header 加这两个类，导航栏随之变成
+        **不透明底色**。本规则特异性高于主题那条，不排除的话会变成白字压白底。
+
+   投影比标题轻一档 —— 导航字号小，太重会糊。
+   ---------------------------------------------------------------------------- */
+html:not([data-theme='dark']) #page-header.full_page:not(.nav-fixed):not(.not-top-img) #nav a:not(.child),
+html:not([data-theme='dark']) #page-header.full_page:not(.nav-fixed):not(.not-top-img) #nav span.site-page,
+html:not([data-theme='dark']) #page-header.full_page:not(.nav-fixed):not(.not-top-img) #nav #blog-info,
+html:not([data-theme='dark']) #page-header.full_page:not(.nav-fixed):not(.not-top-img) #nav .site-name {
   color: #FFFFFF;
   text-shadow:
     0 1px 2px rgba(102, 26, 82, .5),
     0 2px 6px rgba(140, 20, 104, .35);
 }
-html:not([data-theme='dark']) #page-header.full_page #nav a:hover {
+/* 悬停：换成浅粉，比纯白多一点反馈 */
+html:not([data-theme='dark']) #page-header.full_page:not(.nav-fixed):not(.not-top-img) #nav a:not(.child):hover,
+html:not([data-theme='dark']) #page-header.full_page:not(.nav-fixed):not(.not-top-img) #nav span.site-page:hover {
   color: #FDEFF8;
 }
 
@@ -1295,7 +1314,6 @@ html:not([data-theme='dark']) #page-header.full_page #nav a:hover {
       url('/img/hero-back.webp');
   }
 }
-
 
 /* ---------------------------------------------------------------------------
    ⑳ 首页壁纸背景 —— 顶部清晰，下滑被页面底色盖住
@@ -1389,21 +1407,12 @@ html:not([data-theme='dark']) #page-header.full_page {
   background-color: transparent;
 }
 
-/* 首屏底部一条很轻的渐隐，让首屏和波浪之间不出现硬边。
-   注意：不能太重 —— 用户在顶部时壁纸必须是"清晰"的。 */
-html:not([data-theme='dark']) #page-header.full_page::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 26%;
-  pointer-events: none;
-  background: linear-gradient(180deg,
-    rgba(255, 250, 252, 0) 0%,
-    rgba(253, 239, 248, .18) 60%,
-    rgba(255, 179, 235, .45) 100%);
-}
+/* ⚠️ 这里原本有一层「首屏底部渐隐」的 ::after，已删除。
+   原因：它贴在首屏底部、到 bottom:0 时突然变成 .45 不透明的粉，
+   而波浪（.hero-waves）是 top: calc(100% - 4px)，从首屏下面 4px 才开始 ——
+   中间因此出现一道硬边，两段粉色也接不上（用户反馈"波浪又改崩了"）。
+   它本来是图片还挂在首屏上时的过渡层；图片后来搬到 ⑳ 的固定层了，
+   这个过渡层就只剩副作用。波浪自身的过渡已经够用。 */
 
 /* 窄屏：画面裁得更狠，取景往下一点别把脸切掉；模糊基准也降一档省性能 */
 @media (max-width: 768px) {
