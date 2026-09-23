@@ -1407,6 +1407,45 @@ html:not([data-theme='dark']) #page-header.full_page {
   background-color: transparent;
 }
 
+/* 首屏底部：把颜色一路推到波浪的颜色，让两者无缝相接
+   ----------------------------------------------------------------------------
+   用户反馈「参考别的页面的波浪，修复主页面依旧存在的问题」。
+   对比发现差异在 hero 的 class：
+       首页     <header class="full_page" id="page-header">
+       别的页面 <header class="not-home-page" id="page-header">
+
+   主题给 #page-header 设了不透明底色 background-color: #af1d88。
+   别的页面首屏保留着它，而 ⑳ 为了让壁纸透出来，把首页首屏设成了 transparent。
+   于是：
+     · 别的页面首屏底部是主题的粉色渐变，和波浪同色系 → 接得很顺
+     · 首页首屏底部是「壁纸 + 半透明粉」，撞上波浪的不透明 #FFB3EB → 出现硬边
+
+   ⚠️ 这一层**曾经删过一次**，原因值得记下来：
+      上一版它的末段只到 rgba(255,179,235,.45)，**没有真正到达波浪的颜色**，
+      所以仍然留了一道缝 —— 方向是对的，实现错了。
+      波浪三层的 fill 实测都是 #FFB3EB（见 .hero-waves i:nth-child(1..3)），
+      所以这里末段直接写不透明的 #FFB3EB，与波浪完全一致。
+
+   ⚠️ 不设 z-index：波浪自己有 z-index: 1，这一层保持 auto，
+      自然压在波浪下面，不会盖住波浪。
+   ---------------------------------------------------------------------------- */
+html:not([data-theme='dark']) #page-header.full_page::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 110px;
+  pointer-events: none;
+  /* 末段必须是**不透明**的 #FFB3EB，否则和波浪之间会留缝 */
+  background: linear-gradient(180deg,
+    rgba(255, 179, 235, 0) 0%,
+    rgba(255, 179, 235, .35) 45%,
+    rgba(255, 179, 235, .78) 72%,
+    #FFB3EB 100%);
+}
+
+
 /* ⚠️ 这里原本有一层「首屏底部渐隐」的 ::after，已删除。
    原因：它贴在首屏底部、到 bottom:0 时突然变成 .45 不透明的粉，
    而波浪（.hero-waves）是 top: calc(100% - 4px)，从首屏下面 4px 才开始 ——
