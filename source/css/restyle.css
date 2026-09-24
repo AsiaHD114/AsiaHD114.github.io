@@ -1681,3 +1681,119 @@ html:not([data-theme='dark']) #page-header:not([style]) #post-info .post-title {
     0 2px 8px rgba(140, 20, 104, .45),
     0 4px 20px rgba(140, 20, 104, .28);
 }
+
+/* ============================================================================
+   ㉘ 文章底部的「相关推荐」—— 同一块深色，补上漏掉的一半
+   ----------------------------------------------------------------------------
+   用户反馈：「这个相关推荐不符合主题色」，并附了截图 ——
+   一块深紫卡片压在淡粉页面里，非常突兀。
+
+   根因：**「相关推荐」和「上一篇/下一篇」用的是同一个 class**。
+   主题模板 scripts/helpers/related_post.js 生成的结构是：
+     <div class="relatedPosts">
+       <div class="headline">相关推荐</div>
+       <div class="relatedPosts-list">
+         <a class="pagination-related" href="...">
+           <div class="cover" style="background: var(--default-bg-color)"></div>
+           <div class="info text-center">…date… …title…</div>
+         </a>
+
+   而主题 CSS（_layout/pagination.styl 第 61-67 行）对 .pagination-related 写的是：
+     background: $dark-black            ← 纯黑（#000000，见 var.styl 第 39 行）
+   再叠加 _global/function.styl 的 postImgHover：.cover { opacity: .4 }
+   而 .cover 的背景是模板塞的行内变量 var(--default-bg-color)，
+   它等于 $theme-color = theme_color.main = #AF1D88（见 _global/index.styl 第 38 行）。
+   → 黑底 + 40% 洋红 = 截图里那块深紫。
+
+   ⚠️ 为什么 ㉖ 没管住它：
+      ㉖ 的选择器是 `#pagination .pagination-related`。
+      相关推荐在 `.relatedPosts` 里，根本没有 #pagination 祖先，所以原样漏了出来。
+      这也是为什么上下篇已经变浅了、相关推荐还是一块黑。
+
+   做法：**不发明新语言，直接复用 ⑰/㉖ 那套**（同一组色值、同一个圆角、
+   同一种悬停反馈）。两个位置本来就是同一个组件，观感必须一致。
+   依据 frontend-design：「cut any decoration that does not serve the brief」
+   与「spend your boldness in one place」—— 这里不该再出现第二种卡片语言。
+
+   对比度（ui-ux-pro-max 优先级 1，正文需 ≥4.5:1）：
+     卡片底 = blush #FDEFF8 以 55% 压在白色文章卡上 → 合成色 #FEF6FB
+     标题 #661A52   ≈ 10.8:1  ✅
+     日期 #6B5560   ≈  6.4:1  ✅（小字也够）
+     摘要 #6B5560   ≈  6.4:1  ✅
+   都比原来那块深紫上的白字更稳，而且不再是页面里唯一的异色。
+
+   ⚠️ 兜底色为什么也从 #8A6E78 换成 #6B5560：
+     按主题模板，.info-1 / .info-2 里的文字**全部**包在 .info-item-1 /
+     .info-item-2 里，所以下面那几条 item 级规则已经覆盖了所有可见文字，
+     #8A6E78 这一层实际是死代码。但它在 #FEF6FB 上只有 4.3:1 —— 一旦以后
+     模板改动、真有文字直接落在 .info 上，就会静默变成不达标。
+     与其留个坑，不如换成达标值；今天观感零变化（本来就全被覆盖）。
+     （㉖ 的上下篇里还留着同样的 #8A6E78 兜底，情况一样，没有一起动。）
+   --------------------------------------------------------------------------- */
+
+html:not([data-theme='dark']) .relatedPosts .pagination-related {
+  /* 与 ㉖ 完全同一组值：半透明淡粉底 + 淡粉内描边 */
+  background: rgba(253, 239, 248, .55);
+  box-shadow: inset 0 0 0 1.5px rgba(251, 212, 238, .9);
+  border-radius: 8px;
+  transition: box-shadow .25s ease, background-color .25s ease, transform .25s ease;
+}
+
+/* 封面层。四篇文章都没有配封面图，所以这一层永远是主题兜底色 #AF1D88。
+   压到几乎看不见 —— 留着 opacity 机制，以后真有封面图时只是一层极淡底纹，
+   不会又变成一块深色。悬停时也只是从 .12 到 .18，避免洋红洗掉深色文字。 */
+html:not([data-theme='dark']) .relatedPosts .pagination-related .cover {
+  opacity: .12;
+}
+
+html:not([data-theme='dark']) .relatedPosts .pagination-related:hover .cover {
+  opacity: .18;
+  transform: none;      /* 兜底色是纯色，缩放看不出来，索性去掉 */
+}
+
+/* 悬停：半透明 → 几乎实白，配粉描边与轻抬。与 ㉖ 一致。 */
+html:not([data-theme='dark']) .relatedPosts .pagination-related:hover {
+  background: rgba(255, 255, 255, .92);
+  box-shadow: inset 0 0 0 1.5px #F79FDD,
+              0 6px 16px -8px rgba(175, 29, 136, .28);
+  transform: translateY(-2px);
+}
+
+/* 文字改深色。主题原规则是 color: var(--white)，在浅底上完全看不见。
+   （兜底值用 #6B5560 而不是 ㉖ 里那个 #8A6E78，原因见上面注释。） */
+html:not([data-theme='dark']) .relatedPosts .pagination-related .info .info-1,
+html:not([data-theme='dark']) .relatedPosts .pagination-related .info .info-2 {
+  color: #6B5560;
+}
+
+/* 日期（主题给它加了 text-transform: uppercase，对日期无影响，保留） */
+html:not([data-theme='dark']) .relatedPosts .pagination-related .info .info-1 .info-item-1 {
+  color: #6B5560;
+}
+
+/* 文章名 —— 这块里最该被看见的东西 */
+html:not([data-theme='dark']) .relatedPosts .pagination-related .info .info-1 .info-item-2 {
+  color: #661A52;
+  font-weight: 700;
+}
+
+/* 悬停时顶替上来的摘要 */
+html:not([data-theme='dark']) .relatedPosts .pagination-related .info .info-2 .info-item-1 {
+  color: #6B5560;
+}
+
+/* 键盘焦点：主题这块也没给焦点环，补一个（与 ㉖ 同款） */
+html:not([data-theme='dark']) .relatedPosts .pagination-related:focus-visible {
+  outline: 2px solid #AF1D88;
+  outline-offset: 3px;
+}
+
+/* 系统开启「减少动效」：只留颜色反馈 */
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-theme='dark']) .relatedPosts .pagination-related {
+    transition: box-shadow .25s ease, background-color .25s ease;
+  }
+  html:not([data-theme='dark']) .relatedPosts .pagination-related:hover {
+    transform: none;
+  }
+}
