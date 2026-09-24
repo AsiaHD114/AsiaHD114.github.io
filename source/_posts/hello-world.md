@@ -1,5 +1,13 @@
 ---
 title: Hello World
+# 置顶。
+# hexo-generator-index 4.0.0 的排序是 (b.sticky || 0) - (a.sticky || 0)，
+# 所以这是「数值越大越靠前」，不是布尔值。加了这个以后，
+# 不管以后再加多少新文章，这一篇都会钉在首页第一位。
+# 副作用：首页标题前会出现一个图钉图标（主题模板 indexPostUI.pug 第 23 行，
+# 判据是 article.top || article.sticky > 0）。那个图标的默认色是主题的
+# $light-orange #FF7242，与本博客配色冲突，已在 restyle.css 第 ㉙ 节改掉。
+sticky: 1
 # date 有两个作用：文章排序，以及页面上显示的「发表于」。
 # 它**不再影响网址** —— permalink 已经由 :year/:month/:day/:title/ 改成 :title/，
 # 所以这一篇的网址固定是 /hello-world/，以后怎么改日期都不会断链。

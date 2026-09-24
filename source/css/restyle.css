@@ -1797,3 +1797,50 @@ html:not([data-theme='dark']) .relatedPosts .pagination-related:focus-visible {
     transform: none;
   }
 }
+
+/* ============================================================================
+   ㉙ 首页「置顶」图钉 —— 换成主题色 + 补一句给屏幕阅读器的文字
+   ----------------------------------------------------------------------------
+   用户要求把 hello-world 置顶。机制在 front-matter（sticky: 1），
+   这里只处理它带出来的两个副作用。
+
+   ① 颜色不对：
+      主题模板 indexPostUI.pug 第 23-24 行，在首页给置顶文章的标题前面插一个
+        <i class="fas fa-thumbtack sticky"></i>
+      颜色来自 _page/homepage.styl 第 124-127 行：
+        .sticky { color: $sticky-color }
+      而 $sticky-color = $light-orange = #FF7242（var.styl 第 4 / 58 行）——
+      **一个橙色图钉**，与本博客全程的粉/玫红系统完全冲突。
+      按用户一贯要求「保持配色不变」，这里换成主色 #AF1D88
+      （对白卡片 6.26:1，和分页/按钮用的是同一个值）。
+
+   ② 屏幕阅读器读不到「置顶」这层信息：
+      图钉是纯 <i>，没有文字。链接的可访问名只有「Hello World」，
+      读屏用户完全不知道这篇是置顶的。
+      所以补一个视觉隐藏的「置顶」文字（业界通用的 .sr-only 写法）。
+      ⚠️ 如实说明：这是 CSS 生成内容，NVDA / JAWS / VoiceOver 都会念，
+      但它终究不等于真实文本节点，属于「比没有好」而不是完美方案。
+      要完美得改主题模板，那会让以后升级主题时多一处冲突，不值得。
+
+   特异性（已核对编译产物）：
+     主题  #recent-posts .recent-post-item > .recent-post-info > .article-title .sticky   (1,4,0)
+     本规则 加 html:not([data-theme='dark']) 前缀后                                          (1,5,1)
+   --------------------------------------------------------------------------- */
+
+html:not([data-theme='dark']) #recent-posts .recent-post-item > .recent-post-info > .article-title .sticky {
+  color: #AF1D88;
+}
+
+html:not([data-theme='dark']) #recent-posts .recent-post-item > .recent-post-info > .article-title .sticky::after {
+  content: '置顶';
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
