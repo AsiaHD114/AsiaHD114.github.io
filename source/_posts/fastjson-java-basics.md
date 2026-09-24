@@ -3,7 +3,7 @@ title: fastjson-java-初学习
 date: 2026-6-12 16:00:00
 tags: [web, 技术]
 categories:
-  - [技术]
+  - [技术, Java, 安全]
 ---
 
 Fastjson本质上就是将**jave对象转换成json格式**，也可以将**json对象转换成java格式**
