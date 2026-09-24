@@ -1558,15 +1558,15 @@ html:not([data-theme='dark']):has(#album-page) #page-header.not-home-page {
   background-image:
     /* 上层：竖向遮罩。顶部压浅保标题可读，底部渐到波浪色 */
     linear-gradient(180deg,
-      rgba(255, 250, 252, .42) 0%,
-      rgba(255, 246, 251, .34) 34%,
-      rgba(253, 239, 248, .40) 70%,
-      rgba(255, 179, 235, .78) 100%),
+      rgba(255, 250, 252, .20) 0%,
+      rgba(255, 246, 251, .16) 34%,
+      rgba(253, 239, 248, .24) 70%,
+      rgba(255, 179, 235, .72) 100%),
     /* 中层：斜向粉色，把照片的紫调往站点色系拉 */
     linear-gradient(135deg,
-      rgba(255, 211, 240, .38) 0%,
-      rgba(255, 179, 235, .26) 50%,
-      rgba(253, 239, 248, .42) 100%),
+      rgba(255, 211, 240, .18) 0%,
+      rgba(255, 179, 235, .12) 50%,
+      rgba(253, 239, 248, .26) 100%),
     /* 底层：照片 */
     url('/img/album-hero.webp');
   background-size: cover, cover, cover;
