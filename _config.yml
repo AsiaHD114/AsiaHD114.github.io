@@ -21,7 +21,23 @@ timezone: ""
 ##    漏改 root 的话全站 CSS/JS/图片都会 404，页面裸奔 —— 这是 GitHub Pages 最经典的翻车方式。
 url: https://AsiaHD114.github.io
 root: /
-permalink: :year/:month/:day/:title/
+
+# 永久链接 —— 只用文件名，不带日期。
+#
+# ⚠️ 这里原来是 :year/:month/:day/:title/，含义是「改 front-matter 里的 date
+#    就等于改网址」。已经因此断过链，两条都是实测 404：
+#      /2026/09/23/random-chunked-transfer/   改日期 → 404
+#      /2026/09/24/ghost-bits-waf-bypass/     改日期 → 404
+#    改成 :title/ 之后，date 只管排序和显示，不再参与网址 ——
+#    以后再怎么调日期，网址一个字都不会变。
+#
+# :title 取的是**文件名**（slug），不是 front-matter 里的 title，
+# 所以中文标题不会把中文塞进网址。四篇文章现在的网址是：
+#   /hello-world/   /fastjson-java-basics/   /random-chunked-transfer/   /ghost-bits-waf-bypass/
+#
+# 旧的日期式网址由 scripts/legacy-redirects.js 生成跳转页兜着，不会 404。
+# 加新文章不用动那个脚本；只有「换成新方案之前已经上线过的网址」才需要往里登记。
+permalink: :title/
 permalink_defaults:
 pretty_urls:
   trailing_index: true # 设为 false 可去掉固定链接末尾的 'index.html'
