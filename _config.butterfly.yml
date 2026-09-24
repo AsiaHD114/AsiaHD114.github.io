@@ -312,8 +312,8 @@ aside:
     content: 别看了，没有重要的事awa
   card_recent_post:
     enable: true
-    # 设为 0 表示显示全部
-    limit: 5
+    # 设为 0 表示显示全部。用户要求上限 3 篇。
+    limit: 3
     # 排序依据：date（发布日期）/ updated（更新日期）
     sort: date
     sort_order:
