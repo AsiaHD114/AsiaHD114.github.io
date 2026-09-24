@@ -1582,3 +1582,61 @@ html:not([data-theme='dark']):has(#album-page) #page-header.not-home-page {
     background-position: center top, center top, center 22%;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   ㉖ 上下篇导航 —— 方案 A（极简文字 + 细分隔线）
+   ----------------------------------------------------------------------------
+   用户在三个方案里选了 A。之前 ⑰ 做的是"淡粉卡片"，实测观感是：
+   底色淡到像褪色污渍、描边几乎看不见、箭头又细又贴边 —— 反馈"太丑了"。
+
+   方案 A 的取舍：**去掉方框这个装饰面**，只留文字。
+   依据（frontend-design）："cut any decoration that does not serve the brief"。
+   这块的功能是"让你去下一篇"，它该安静；不加新的视觉面。
+
+   ⚠️ 这是**覆盖** ⑰，不是删掉 ⑰。原因：
+      ⑰ 那一段同时管着箭头位置、文字让位、焦点环、reduced-motion 分支，
+      那些都还要用。这里只把"卡片"相关的几项压掉：背景、描边、圆角、悬停位移。
+      （另外我这一路删 CSS 出过事故，覆盖比删除安全。）
+
+   ⚠️ 悬停反馈怎么保：
+      没有卡片就没有"背景变化"可用，所以改成两件事 ——
+        · 箭头向外滑 4px（⑰ 里已有，保留，这是方向隐喻）
+        · 标题颜色加深到 #AF1D88
+      依据（ui-ux-pro-max「Hover States」）："Change cursor and add subtle
+      visual change"，Don't: "No hover feedback on clickable elements"。
+   --------------------------------------------------------------------------- */
+
+/* ① 去掉卡片面 */
+html:not([data-theme='dark']) #pagination .pagination-related {
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  /* 高度也收回来：没有面了，撑那么高只会显得空 */
+  height: 78px;
+}
+
+/* ② 底部一条发丝线，给这块一个收尾 */
+html:not([data-theme='dark']) #pagination.pagination-post {
+  border-bottom: 1px solid #FBD4EE;
+  padding-bottom: 20px;
+}
+
+/* ③ 悬停：没有面了，改成文字加深（箭头外滑在 ⑰ 里已有） */
+html:not([data-theme='dark']) #pagination .pagination-related:hover {
+  background: none;
+  box-shadow: none;
+  transform: none;
+}
+html:not([data-theme='dark']) #pagination .pagination-related:hover .info .info-1 .info-item-2 {
+  color: #AF1D88;
+}
+html:not([data-theme='dark']) #pagination .pagination-related:hover .info .info-1 .info-item-1 {
+  color: #8A6E78;
+}
+
+/* ④ 窄屏也跟着收 */
+@media (max-width: 768px) {
+  html:not([data-theme='dark']) #pagination .pagination-related {
+    height: 72px;
+  }
+}
