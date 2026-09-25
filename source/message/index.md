@@ -49,3 +49,17 @@ comments_on: true
       不再显示在这一页上（数据还在，只是挂到了旧路径下）。
       导航里显示的名字在 _config.butterfly.yml 的 menu 段。
 -->
+
+<!--
+  ⚠️ 下面这个空 span 是**故意的**，不要删。
+  它的作用是给 CSS 一个「只在聊天喵页生效」的钩子：
+  所有内页的首屏都是同一个 #page-header.not-home-page，
+  主题没有提供按页面区分的类名，所以这里放一个唯一的 id，
+  restyle.css 用 :has(#message-page) 把那张黄昏壁纸只挂到本页。
+  （相册页用的是同一个办法：:has(#album-page)；关于页更早用的是 :has(#about-timer)。）
+
+  span 带 hidden：不显示、不占位、不影响读屏。
+  它写在 Markdown 正文里，会被 Hexo 包成一个空 <p> —— 这一点与相册页完全一样，
+  是既有行为，没有额外副作用。
+-->
+<span id="message-page" hidden></span>

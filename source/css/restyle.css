@@ -2075,3 +2075,62 @@ html:not([data-theme='dark']) #page-header.full_page #site-title {
     font-size: 4.6em;
   }
 }
+
+/* ============================================================================
+   ㉝ 聊天喵页首屏壁纸 —— 黄昏鹿影（只挂这一页）
+   ----------------------------------------------------------------------------
+   用户要求：「在聊天喵这一栏加入这个壁纸，要求和之前做相册那一栏时一样」。
+   所以这一节是 ㉕ 的翻版，只有两处不同：判别标记和图片路径。
+
+   ⚠️ 图片是怎么来的（值得记一笔，因为这台机器没有任何图片工具）：
+      用户给的原图是 **1920x1080 的 PNG，2.06 MB** —— 直接上线等同于给这一页
+      挂一个 2 MB 的首屏资源。而本机没有 sharp / Pillow / ImageMagick / ffmpeg / cwebp
+      （都查过），装依赖又要动 package.json。
+      最后用的是：无头 Chromium 的 canvas —— 把 PNG 画进 canvas，
+      用 canvas.toDataURL('image/webp', 0.86) 编码，再把 base64 从 --dump-dom
+      的输出里取回来还原成文件。
+      结果：1920x1080 / **45.4 KB**（压缩 97.9%），肉眼无可见损失。
+      与相册那张（34.9 KB）同一档，没有破例引入 npm 依赖。
+      ⚠️ 图片是用户自己提供的，不违反「不加新图片」那条约定。
+
+   ⚠️ 遮罩数值与 ㉕ 完全一致（用户要求「一样」）：
+      竖向 .07 / .05 / .10 → 底部渐到波浪色 rgba(255,179,235,.70)
+      斜向粉 .07 / .04 / .11
+      ⚠️ 但要留个心眼：这张图**比富士山那张暗得多**（底部的山丘接近纯黑），
+         底部 .70 的粉压在近黑上会偏灰紫，与波浪的 #FFB3EB 之间可能出现一道色阶。
+         先按「一样」做，我会看截图；真出现色阶就把底部那一档提到 .88 或直接给 #FFB3EB。
+
+   ✅ 一个比相册页更好的地方：
+      这张图整体偏暗（尤其标题所在的天空区域是深靛蓝），
+      所以 ⑲ 那条「白字 + 深玫红投影」的站名在这里的对比度**远好于相册页**，
+      不需要为了可读性再压遮罩。这一点和 ㉕ 的处境正好相反。
+   --------------------------------------------------------------------------- */
+
+html:not([data-theme='dark']):has(#message-page) #page-header.not-home-page {
+  background-image:
+    /* 上层：竖向遮罩。与㉕同值 —— 顶部只留极淡一层保住"属于粉色系"的观感，底部渐到波浪色 */
+    linear-gradient(180deg,
+      rgba(255, 250, 252, .07) 0%,
+      rgba(255, 246, 251, .05) 34%,
+      rgba(253, 239, 248, .10) 70%,
+      rgba(255, 179, 235, .70) 100%),
+    /* 中层：斜向粉色，把照片的橙紫调往站点色系轻轻带一下 */
+    linear-gradient(135deg,
+      rgba(255, 211, 240, .07) 0%,
+      rgba(255, 179, 235, .04) 50%,
+      rgba(253, 239, 248, .11) 100%),
+    /* 底层：照片 */
+    url('/img/message-hero.webp');
+  background-size: cover, cover, cover;
+  /* 第三层取景偏上：保住太阳、湖面和那只鹿，同时把近黑的底部推出可视区 */
+  background-position: center top, center top, center 30%;
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  background-color: #FFFAFC;
+}
+
+/* 窄屏：取景再上移一点，别把鹿和湖切掉 */
+@media (max-width: 768px) {
+  html:not([data-theme='dark']):has(#message-page) #page-header.not-home-page {
+    background-position: center top, center top, center 22%;
+  }
+}
