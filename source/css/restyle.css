@@ -1873,18 +1873,22 @@ html:not([data-theme='dark']) #recent-posts .recent-post-item > .recent-post-inf
    参考站是 https://blog.fqzlr.top/ 。它的首屏是
      「大标题 / 一行副标题 / 一行链接（1 个带文字胶囊 + 3 个纯圆形图标）」。
 
-   配色不新增任何颜色，但**明暗关系与参考站相反**：
-     ⚠️ 参考站的壁纸是一张深色插画，所以它用「白字 + 白色半透明玻璃圆」。
-        本站首页壁纸是浅粉的波奇酱，同样做成白字实测直接糊掉 ——
-        白字压浅粉只有约 1.3:1，白色图标的描边也几乎看不见。
-        所以这里反过来做，走「深色字 + 浅色实底」：
-     · 副标题 —— 深玫红 #661A52（对浅粉 ≈ 8:1），配一层极淡的白色投影
-       把字从插画线条里托出来。
-     · 链接 —— 88% 白底 + 淡玫红描边 + 主色 #AF1D88 图标（≈ 6.26:1）；
-       悬停/聚焦时翻成实底主色 + 白图标（同样是 6.26:1，方向相反）。
-       ⚠️ 不挂 backdrop-filter：底色已经接近实白，模糊看不见还白吃一个合成层
-       —— 这条和 ⑯ 里对「模糊纯白」的结论一致。
-     色值全部取自既有色板，没有引入新颜色。
+   配色不新增任何颜色。形态按用户要求走参考站的「透明玻璃」，
+   但**图标颜色没跟着参考站用白色** —— 原因是实测：
+     · 参考站壁纸是深色插画，白色玻璃圆 + 白图标很清楚。
+     · 本站首页壁纸是浅粉的波奇酱（约 #EFC3DE），
+       白图标压上去只有约 1.5:1，等于看不见 —— 我先按参考站原样做过一版，
+       截图确认糊掉了（用户上一轮也正是在反馈这个）。
+   所以：**玻璃的「透明」照做，图标与文字的明暗反过来** ——
+     底：rgba(255,255,255,.16) 的透明玻璃 + 1px 白描边 + backdrop-filter 模糊
+     图标/文字：#661A52 深玫红（对玻璃合成色 ≈ 7:1）
+   这样壁纸仍然透得过来（这是「透明样式」的本体），同时字看得清。
+   ⚠️ backdrop-filter 这次是**有意义的**：底色是真透明，模糊壁纸才有东西可模糊。
+      与 ⑯ 里「模糊纯白纯属浪费合成层」的结论不冲突 —— 那条说的是底色接近实白的情况。
+
+   悬停/聚焦：玻璃提亮到 .55，描边转实白，图标仍用深玫红，
+   外加一点点上抬与柔和投影（层次靠阴影，不靠加粗描边）。
+     色值全部取自既有色板。
 
    ⚠️ 入场动画用 animation-fill-mode: backwards，**不是 both**：
       轮播是靠改内联 style.opacity 实现的，而 fill-mode: both 会让动画结束后的
@@ -1936,12 +1940,19 @@ html:not([data-theme='dark']) #page-header.full_page #hero-links .hero-link {
   justify-content: center;
   box-sizing: border-box;
   height: 44px;
-  border: 1px solid rgba(175, 29, 136, .28);
-  background: rgba(255, 255, 255, .88);
-  color: #AF1D88;
+  border: 1px solid rgba(255, 255, 255, .6);
+  background: rgba(255, 255, 255, .16);
+  color: #661A52;
   font-size: 1.15em;
   line-height: 1;
   text-decoration: none;
+  /* 玻璃：真透明底 + 模糊壁纸。内圈一道顶部高光让球形轮廓在浅粉上也读得出来，
+     外圈一层很淡的玫红投影负责和壁纸分离。 */
+  -webkit-backdrop-filter: blur(8px) saturate(1.2);
+  backdrop-filter: blur(8px) saturate(1.2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .75),
+    0 3px 12px -8px rgba(102, 26, 82, .45);
   transition: background-color .25s ease, color .25s ease,
               border-color .25s ease, transform .25s ease, box-shadow .25s ease;
 }
@@ -1960,15 +1971,18 @@ html:not([data-theme='dark']) #page-header.full_page #hero-links .hero-link--tex
   border-radius: 22px;
 }
 
-/* 悬停与键盘聚焦同一套反馈：由浅底翻成实底主色，图标翻成白色。
+/* 悬停与键盘聚焦同一套反馈：玻璃提亮、描边转实白、轻微上抬。
    ui-ux-pro-max：「Change cursor and add subtle visual change」，
    Don't: 「No hover feedback on clickable elements」。 */
 html:not([data-theme='dark']) #page-header.full_page #hero-links .hero-link:hover,
 html:not([data-theme='dark']) #page-header.full_page #hero-links .hero-link:focus-visible {
-  background: #AF1D88;
-  border-color: #AF1D88;
-  color: #FFFFFF;
+  background: rgba(255, 255, 255, .55);
+  border-color: #FFFFFF;
+  color: #661A52;
   transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .9),
+    0 8px 18px -10px rgba(102, 26, 82, .5);
 }
 
 /* 焦点环：浅粉壁上玫红环够用，再垫一圈白色光晕，

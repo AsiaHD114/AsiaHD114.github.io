@@ -65,7 +65,6 @@
   var LINKS = [
     { icon: 'fab fa-github', href: 'https://github.com/AsiaHD114', label: 'GitHub', text: 'GitHub', blank: true },
     { icon: 'fas fa-envelope', href: 'mailto:asiahd114@gmail.com', label: '邮箱 asiahd114@gmail.com' },
-    { icon: 'fab fa-qq', href: 'mailto:2985877386@qq.com', label: 'QQ 邮箱 2985877386@qq.com' },
     { icon: 'fas fa-heart', href: '/about/', label: '关于笔者' },
     { icon: 'fas fa-comment-dots', href: '/message/', label: '聊天喵' }
   ];
