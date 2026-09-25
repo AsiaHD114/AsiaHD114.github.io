@@ -2014,3 +2014,36 @@ html:not([data-theme='dark']) #page-header.full_page #hero-links .hero-link:focu
     transform: none;
   }
 }
+
+/* ============================================================================
+   ㉛ 首页站名 —— 放大
+   ----------------------------------------------------------------------------
+   用户要求：「AsiaHD'blog 这个标题改大一点」。
+
+   主题原本的两档字号（已核对编译产物）：
+     #page-header #site-title                     1.85em  ≈ 26px   （窄屏）
+     @media (min-width: 768px) #page-header #site-title  2.85em  ≈ 40px   （桌面）
+
+   ⚠️ 为什么要写两档、而不是只写一条：
+      media query **不增加特异性**。如果只在外层写一条 3.6em，
+      它在窄屏和桌面都会以 (1,3,1) 压过主题那条 (1,1,0) 的桌面规则 ——
+      于是手机上也会套用桌面的字号。所以窄屏基数与外层都要显式给出，
+      并且 min-width 那条必须排在基数之后（同文件、同特异性，靠顺序取胜）。
+
+   ⚠️ 只作用于首页（.full_page）：
+      内页的 #site-title 装的是「归档」「关于笔者」「聊天喵」这些短词，
+      它们没被要求改，跟着放大反而会显得空。想一起放大的话说一声。
+
+   ⚠️ 不动的部分：line-height（主题 1.5）、以及 hero-typing.js 那个光标
+      的尺寸 —— 光标用的是 .82em，跟着字号自动缩放，不需要单独改。
+   --------------------------------------------------------------------------- */
+
+html:not([data-theme='dark']) #page-header.full_page #site-title {
+  font-size: 2.2em;
+}
+
+@media (min-width: 768px) {
+  html:not([data-theme='dark']) #page-header.full_page #site-title {
+    font-size: 3.6em;
+  }
+}
