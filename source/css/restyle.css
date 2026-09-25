@@ -2030,6 +2030,16 @@ html:not([data-theme='dark']) #page-header.full_page #hero-links .hero-link:focu
       于是手机上也会套用桌面的字号。所以窄屏基数与外层都要显式给出，
       并且 min-width 那条必须排在基数之后（同文件、同特异性，靠顺序取胜）。
 
+   ⚠️ 二次放大（用户追加要求「再大一些」）：
+      3.6em → 4.6em。宽度上限是实测出来的，不是估的：
+        「AsiaHD's blog」串宽 ≈ 4.86 × 字号（在 1440 截图里量得 245px @ 50.4px）
+        #site-info 可用宽度 = 视口宽 - 20px（左右各 10px padding）
+        所以放得下的一行上限 ≈ 视口宽 / 4.86
+          504px 视口 → 约 99px    360px 视口 → 约 70px
+      当前桌面 4.6em ≈ 64px（串宽约 313px），360px 手机上仍是一行；
+      窄屏档取 3em ≈ 42px（串宽约 204px），320px 视口也放得下。
+      ⚠️ 再往上加要先过一遍这道算术，超过就会折行 —— 标题折行在首屏很难看。
+
    ⚠️ 只作用于首页（.full_page）：
       内页的 #site-title 装的是「归档」「关于笔者」「聊天喵」这些短词，
       它们没被要求改，跟着放大反而会显得空。想一起放大的话说一声。
@@ -2039,11 +2049,11 @@ html:not([data-theme='dark']) #page-header.full_page #hero-links .hero-link:focu
    --------------------------------------------------------------------------- */
 
 html:not([data-theme='dark']) #page-header.full_page #site-title {
-  font-size: 2.2em;
+  font-size: 3em;
 }
 
 @media (min-width: 768px) {
   html:not([data-theme='dark']) #page-header.full_page #site-title {
-    font-size: 3.6em;
+    font-size: 4.6em;
   }
 }
