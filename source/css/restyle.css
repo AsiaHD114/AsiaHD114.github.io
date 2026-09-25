@@ -1873,20 +1873,21 @@ html:not([data-theme='dark']) #recent-posts .recent-post-item > .recent-post-inf
    参考站是 https://blog.fqzlr.top/ 。它的首屏是
      「大标题 / 一行副标题 / 一行链接（1 个带文字胶囊 + 3 个纯圆形图标）」。
 
-   配色不新增任何颜色。形态按用户要求走参考站的「透明玻璃」，
-   但**图标颜色没跟着参考站用白色** —— 原因是实测：
-     · 参考站壁纸是深色插画，白色玻璃圆 + 白图标很清楚。
-     · 本站首页壁纸是浅粉的波奇酱（约 #EFC3DE），
-       白图标压上去只有约 1.5:1，等于看不见 —— 我先按参考站原样做过一版，
-       截图确认糊掉了（用户上一轮也正是在反馈这个）。
-   所以：**玻璃的「透明」照做，图标与文字的明暗反过来** ——
+   配色不新增任何颜色。形态走参考站的「透明玻璃」。
+     ⚠️ 文字与图标的明暗这里改过一轮，记录一下免得以后又被绕回去：
+       第一版照参考站做「白图标」→ 实测压在这张浅粉壁纸（约 #EFC3DE）上
+       只有约 1.5:1，截图确认糊掉；第二版改成深玫红 #661A52（≈8:1）。
+       用户随后明确要求「链接也改成白色的字」，所以有了第三版：
+       **白色 + 深玫红投影** —— 可读性靠投影而不靠色差，
+       手法与站名（⑲）完全一致。代价如实写在下面两条规则里。
+
      底：rgba(255,255,255,.16) 的透明玻璃 + 1px 白描边 + backdrop-filter 模糊
-     图标/文字：#661A52 深玫红（对玻璃合成色 ≈ 7:1）
-   这样壁纸仍然透得过来（这是「透明样式」的本体），同时字看得清。
+     字/图标：#FFFFFF + 深玫红投影
+     壁纸仍然透得过来（这是「透明样式」的本体）。
    ⚠️ backdrop-filter 这次是**有意义的**：底色是真透明，模糊壁纸才有东西可模糊。
       与 ⑯ 里「模糊纯白纯属浪费合成层」的结论不冲突 —— 那条说的是底色接近实白的情况。
 
-   悬停/聚焦：玻璃提亮到 .55，描边转实白，图标仍用深玫红，
+   悬停/聚焦：玻璃提亮到 .55、描边转实白，白字投影再压紧一档，
    外加一点点上抬与柔和投影（层次靠阴影，不靠加粗描边）。
      色值全部取自既有色板。
 
@@ -1915,10 +1916,18 @@ html:not([data-theme='dark']) #recent-posts .recent-post-item > .recent-post-inf
 
 html:not([data-theme='dark']) #page-header.full_page #site-subtitle {
   margin: 12px 0 0;
-  color: #661A52;
+  color: #FFFFFF;
   font-size: 1.15em;
   letter-spacing: .04em;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, .6);
+  /* 与站名（⑲）同一套「白字 + 深玫红投影」。
+     ⚠️ 字号只有站名的四分之一，笔画细得多，所以第一层投影比站名更紧更实
+        （.75/2px 对 .55/2px），否则 16px 的白字压在浅粉壁上会散开。
+     ⚠️ 如实说：白字对底色本身只有约 1.5:1，可读性**完全靠这层投影撑着**，
+        低于原先的深玫红版本（对浅粉约 8:1）。这是用户明确要求的效果。 */
+  text-shadow:
+    0 1px 2px rgba(102, 26, 82, .75),
+    0 2px 6px rgba(140, 20, 104, .55),
+    0 3px 14px rgba(140, 20, 104, .35);
   /* 透明度由脚本在轮播时改，所以这里必须有一条 transition 与之配对 */
   transition: opacity .42s ease;
   animation: hero-fade-in .6s ease 1.15s backwards;
@@ -1942,10 +1951,16 @@ html:not([data-theme='dark']) #page-header.full_page #hero-links .hero-link {
   height: 44px;
   border: 1px solid rgba(255, 255, 255, .6);
   background: rgba(255, 255, 255, .16);
-  color: #661A52;
+  color: #FFFFFF;
   font-size: 1.15em;
   line-height: 1;
   text-decoration: none;
+  /* 白图标/白字同样靠深玫红投影才立得住（FontAwesome 图标本质是字体，
+     所以 text-shadow 对图标和文字一起生效，不需要再叠 filter: drop-shadow）。
+     紧一档：图标笔画比文字更细。 */
+  text-shadow:
+    0 1px 2px rgba(102, 26, 82, .8),
+    0 1px 5px rgba(140, 20, 104, .6);
   /* 玻璃：真透明底 + 模糊壁纸。内圈一道顶部高光让球形轮廓在浅粉上也读得出来，
      外圈一层很淡的玫红投影负责和壁纸分离。 */
   -webkit-backdrop-filter: blur(8px) saturate(1.2);
@@ -1978,7 +1993,10 @@ html:not([data-theme='dark']) #page-header.full_page #hero-links .hero-link:hove
 html:not([data-theme='dark']) #page-header.full_page #hero-links .hero-link:focus-visible {
   background: rgba(255, 255, 255, .55);
   border-color: #FFFFFF;
-  color: #661A52;
+  color: #FFFFFF;
+  text-shadow:
+    0 1px 2px rgba(102, 26, 82, .85),
+    0 1px 5px rgba(140, 20, 104, .65);
   transform: translateY(-2px);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, .9),
