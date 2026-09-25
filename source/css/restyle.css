@@ -1863,3 +1863,140 @@ html:not([data-theme='dark']) #recent-posts .recent-post-item > .recent-post-inf
   white-space: nowrap;
   border: 0;
 }
+
+/* ============================================================================
+   ㉚ 首页首屏 —— 随机副标题 + 一行圆形链接
+   ----------------------------------------------------------------------------
+   元素不在主题模板里，由 source/js/hero-subtitle.js 注入（与 hero-waves /
+   about-hero / hero-typing 同一套做法）。这里只负责长相。
+
+   参考站是 https://blog.fqzlr.top/ 。它的首屏是
+     「大标题 / 一行副标题 / 一行链接（1 个带文字胶囊 + 3 个纯圆形图标）」。
+
+   配色不新增任何颜色，但**明暗关系与参考站相反**：
+     ⚠️ 参考站的壁纸是一张深色插画，所以它用「白字 + 白色半透明玻璃圆」。
+        本站首页壁纸是浅粉的波奇酱，同样做成白字实测直接糊掉 ——
+        白字压浅粉只有约 1.3:1，白色图标的描边也几乎看不见。
+        所以这里反过来做，走「深色字 + 浅色实底」：
+     · 副标题 —— 深玫红 #661A52（对浅粉 ≈ 8:1），配一层极淡的白色投影
+       把字从插画线条里托出来。
+     · 链接 —— 88% 白底 + 淡玫红描边 + 主色 #AF1D88 图标（≈ 6.26:1）；
+       悬停/聚焦时翻成实底主色 + 白图标（同样是 6.26:1，方向相反）。
+       ⚠️ 不挂 backdrop-filter：底色已经接近实白，模糊看不见还白吃一个合成层
+       —— 这条和 ⑯ 里对「模糊纯白」的结论一致。
+     色值全部取自既有色板，没有引入新颜色。
+
+   ⚠️ 入场动画用 animation-fill-mode: backwards，**不是 both**：
+      轮播是靠改内联 style.opacity 实现的，而 fill-mode: both 会让动画结束后的
+      填充值（opacity: 1）一直盖住内联样式，轮播就永远不会变暗 —— 这个坑会静默失效。
+      backwards 只在延迟期间施加起始态，动画一结束就交还给元素自己的样式。
+      延迟 1.15s / 1.32s 是为了排在站名打字（320ms + 每字 95ms）后面。
+
+   ⚠️ 触控目标 44x44（ui-ux-pro-max 优先级 2 的硬要求）：
+      纯图标按钮 width 与 height 都是 44，配合 border-radius: 50% 才是正圆；
+      带文字的胶囊用 padding: 0 22px 撑开，圆角 22px。
+      如果给纯图标也加左右 padding，它会变成 88px 宽的椭圆 —— 所以两者分开写。
+   --------------------------------------------------------------------------- */
+
+@keyframes hero-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+html:not([data-theme='dark']) #page-header.full_page #site-subtitle {
+  margin: 12px 0 0;
+  color: #661A52;
+  font-size: 1.15em;
+  letter-spacing: .04em;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, .6);
+  /* 透明度由脚本在轮播时改，所以这里必须有一条 transition 与之配对 */
+  transition: opacity .42s ease;
+  animation: hero-fade-in .6s ease 1.15s backwards;
+}
+
+html:not([data-theme='dark']) #page-header.full_page #hero-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  animation: hero-fade-in .6s ease 1.32s backwards;
+}
+
+html:not([data-theme='dark']) #page-header.full_page #hero-links .hero-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 44px;
+  border: 1px solid rgba(175, 29, 136, .28);
+  background: rgba(255, 255, 255, .88);
+  color: #AF1D88;
+  font-size: 1.15em;
+  line-height: 1;
+  text-decoration: none;
+  transition: background-color .25s ease, color .25s ease,
+              border-color .25s ease, transform .25s ease, box-shadow .25s ease;
+}
+
+/* 纯图标 → 正圆 */
+html:not([data-theme='dark']) #page-header.full_page #hero-links .hero-link:not(.hero-link--text) {
+  width: 44px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+/* 图标 + 文字 → 胶囊 */
+html:not([data-theme='dark']) #page-header.full_page #hero-links .hero-link--text {
+  gap: 8px;
+  padding: 0 22px;
+  border-radius: 22px;
+}
+
+/* 悬停与键盘聚焦同一套反馈：由浅底翻成实底主色，图标翻成白色。
+   ui-ux-pro-max：「Change cursor and add subtle visual change」，
+   Don't: 「No hover feedback on clickable elements」。 */
+html:not([data-theme='dark']) #page-header.full_page #hero-links .hero-link:hover,
+html:not([data-theme='dark']) #page-header.full_page #hero-links .hero-link:focus-visible {
+  background: #AF1D88;
+  border-color: #AF1D88;
+  color: #FFFFFF;
+  transform: translateY(-2px);
+}
+
+/* 焦点环：浅粉壁上玫红环够用，再垫一圈白色光晕，
+   万一以后换了深色壁纸也还看得见。 */
+html:not([data-theme='dark']) #page-header.full_page #hero-links .hero-link:focus-visible {
+  outline: 2px solid #AF1D88;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, .8);
+}
+
+/* 窄屏：收紧间距。触控目标仍保持 44px，不因为屏幕小就缩到不达标。 */
+@media (max-width: 768px) {
+  html:not([data-theme='dark']) #page-header.full_page #hero-links {
+    gap: 10px;
+    margin-top: 14px;
+  }
+  html:not([data-theme='dark']) #page-header.full_page #site-subtitle {
+    font-size: 1.05em;
+  }
+}
+
+/* 系统开启「减少动效」：不做入场位移，也不做悬停位移，颜色反馈保留 */
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-theme='dark']) #page-header.full_page #site-subtitle,
+  html:not([data-theme='dark']) #page-header.full_page #hero-links {
+    animation: none;
+  }
+  html:not([data-theme='dark']) #page-header.full_page #hero-links .hero-link:hover {
+    transform: none;
+  }
+}

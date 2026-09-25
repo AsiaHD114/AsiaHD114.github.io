@@ -34,6 +34,7 @@ var LOCAL_ASSETS = [
   '/js/about-timer.js',
   '/js/about-hero.js',
   '/js/hero-typing.js',
+  '/js/hero-subtitle.js',
   '/js/bg-scroll-blur.js',
   '/js/oml2d-init.js'
 ];

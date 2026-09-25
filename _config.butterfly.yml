@@ -1142,6 +1142,9 @@ inject:
     # 首页站点标题的打字机效果。脚本自己判断是不是首页（.full_page），
     # 其他页面的 #site-title 内容是「关于笔者」「归档」等，不参与打字。
     - <script src="/js/hero-typing.js"></script>
+    # 首页首屏的随机副标题 + 一行圆形链接（参考 blog.fqzlr.top 的首屏结构）。
+    # 句子清单与链接清单都在脚本顶部的 LINES / LINKS 数组里，改内容只动那里。
+    - <script src="/js/hero-subtitle.js"></script>
     # 整页固定背景的滚动模糊：把滚动进度写进 --bg-blur-progress。
     # 脚本自己判断是不是首页；非首页给固定模糊值，不挂 scroll 监听。
     - <script src="/js/bg-scroll-blur.js"></script>
