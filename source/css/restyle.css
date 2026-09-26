@@ -2689,8 +2689,10 @@ html:not([data-theme='dark']) #pagination .pagination-related .info.text-right::
       第 8-17 行写死的，没有对应的配置开关；而本站的规矩是 themes/ 一个字不改
       （这样以后能直接 git pull 覆盖主题、升级不冲突）。所以用一条 display: none 隐掉。
    ⚠️ 它们是**链接**（/archives/、/tags/、/categories/），不是纯数字 ——
-      隐掉不丢导航：桌面导航栏「博文」下拉里就有同样三项；
-      手机抽屉（#sidebar-menus）里那份独立的 .site-data 也没有动，仍然在。
+      隐掉不丢导航：桌面导航栏「博文」下拉里就有同样三项。
+      ⚠️ 手机抽屉（#sidebar-menus）里还有一份**独立的、同样内容**的 .site-data，
+         也在本节 ④ 里隐掉了（用户要求「全加上」）。两边都灰掉之后，
+         移动端就没有那三个数字了；抽屉里「博文」那一组菜单仍在，导航不受影响。
 
    ⚠️ 语录本来就有现成的坑位，不用新加元素：
       模板第 6 行 `.author-info-description` =
@@ -2737,4 +2739,13 @@ html:not([data-theme='dark']) #aside-content .card-info .author-info-description
       这里把按钮的上边距补回来，别让 Follow Me 贴到语录上。 */
 html:not([data-theme='dark']) #aside-content .card-info #card-info-btn {
   margin-top: 22px;
+}
+
+/* ④ 手机抽屉里那份**独立的** .site-data 也隐掉。
+      ⚠️ 它不是上面那个的副本，而是 themes/butterfly/layout/includes/sidebar.pug
+         第 7-16 行另写的一份（结构相同、内容相同），所以必须单独一条规则 ——
+         ① 那条选择器带 #aside-content，够不到抽屉里。
+      抽屉里剩下的就是头像 + 一整组菜单，那三个数字没了不影响导航。 */
+html:not([data-theme='dark']) #sidebar-menus .site-data {
+  display: none;
 }

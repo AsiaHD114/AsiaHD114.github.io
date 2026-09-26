@@ -978,7 +978,21 @@ clickShowText:
 # https://github.com/francoischalifour/medium-zoom
 # https://fancyapps.com/fancybox/
 # 不需要灯箱就留空
-lightbox:
+#
+# ⚠️ 2026-09-26 起填 fancybox（原来留空 = 全站图片都点不开）。
+#    用户要求「点图放大」—— 文章配图、以及相册详情页照片墙里的 <img> 都会生效。
+#
+# ⚠️ 生效范围与排除方式（主题 main.js 第 259-261 行）：
+#      runLightbox = $article => loadLightbox($article.querySelectorAll('img:not(.no-lightbox)'))
+#    只包**正文容器 #article-container 里**的图，所以侧栏头像、友链头像都不受影响；
+#    单张图不想被放大，给它加 class="no-lightbox" 即可。
+#
+# ⚠️ 资源来自 jsDelivr CDN（themes/butterfly/_config.yml 的 CDN.third_party_provider
+#    是 jsdelivr）。这不是新引入的依赖方向 —— 本站的 Font Awesome 与 share.js
+#    早就在走同一个 CDN，所以保持一致，没有额外把 fancybox 落到本地。
+#    ⚠️ 若哪天 jsDelivr 挂了，表现是「点了没反应」而不是版面坏掉：
+#       图片不会被包成 <a>，页面上看不出异常，只是放大功能失效。
+lightbox: fancybox
 
 # --------------------------------------
 # 标签插件设置
