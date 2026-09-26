@@ -2134,3 +2134,387 @@ html:not([data-theme='dark']):has(#message-page) #page-header.not-home-page {
     background-position: center top, center top, center 22%;
   }
 }
+
+/* ============================================================================
+   ㉞ 相册区 —— 封面墙（总览页）+ 相册详情页
+   ----------------------------------------------------------------------------
+   用户先要求「为相册那一栏添加三个相册：GameTime！、LovelyPhoto、shadows」，
+   随后给了参考站 https://blog.fqzlr.top/albums/（总览页 + 点进去的详情页）。
+   这一节按参考站的**信息结构**重做，配色仍然全部回到本站的粉色系：
+
+     总览页   封面（4:3 渐变占位 + 图标）→ 相册名 + 箭头 → 一句描述 →
+              日期 • 来源 → 标签
+     详情页   返回相册 → 日期 • 来源 • 张数 → 标签 → 照片墙（瀑布流）
+              首屏换成该相册自己的封面渐变（参考站用的是相册的 cover 图）
+
+   ⚠️ 没有照抄参考站的 CSS（它是 Svelte 组件 + Material 3 变量，搬不过来），
+      也没有引入任何图片：封面 = 相册自己的渐变 + 一个 Font Awesome 图标
+      （本站导航图标用的就是 FA）。只借了它的版式与比例：
+        · 封面 aspect-ratio 4/3（参考站 .album-card__cover 就是这个值）
+        · 元信息一行用「•」分隔（参考站 .album-card__meta span+span:before）
+        · 瀑布流用 column-width: 240px 自动分列（参考站 .album-gallery--masonry）
+      卡片本身用了本站的粉色系：白底、#F6DCEE 描边、玫红柔影、悬停上浮 3px。
+
+   ⚠️ 为什么卡片不用主题的 {% galleryGroup %} 标签：
+      ① 它强制输出 <img src='...'>，而本站一张相册照片都没有，src='' 在浏览器里
+         不是「没有图」，会被解析成**当前页面地址**，卡片上就是破图或白跑一次请求；
+      ② 它是「名字压在图上 + 悬停滑出描述」的悬停式版式，和参考站的「上图下文」
+         两段式结构不一样，硬套要写一堆覆盖样式。
+      所以卡片是 source/album/index.md 里手写的 HTML，类名统一 .album-*，
+      样式全在这一节，不依赖主题的 _tags/gallery.styl。
+
+   ⚠️ 卡片宽度：正文栏在 1440px 窗口下约 850px（两侧有侧栏），
+      auto-fill + minmax(220px) 正好得到 3 列（每列约 271px）；
+      窗口变窄时自动降成 2 列、1 列，不需要写媒体查询。
+      ⚠️ 参考站能排 3 列用的是「视口 ≥1200px」的断点，它没考虑正文栏宽度；
+         这里用容器自适应更稳，窄屏不会出现 150px 宽的卡片。
+
+   ⚠️ 详情页首屏（三条约束，缺一条就出问题）：
+      ① 最底层是相册自己的封面渐变（--album-hero-bg，三条小规则各给一份）；
+      ② 中间要压一层文字 scrim（--album-hero-scrim）—— 渐变中段的亮度撑不住
+         白字，压完标题对比度 ≥4.3:1（大字线是 3:1）；
+         ⚠️ 这一层**不能是纯黑**：LovelyPhoto 是浅粉底，近黑压上去会变灰脏，
+            所以它用玫红系 scrim（#8C1468 那一档），深浅两个用近黑紫。
+      ③ 底部要接住波浪：⑳/㉕ 那 4 层波浪是粉色的，hero 底部不落回 #FFB3EB
+         就会有一道色阶（㉕ 当年就是为这个把遮罩收在波浪色上）。
+      层序即画序：先写的在最上面。
+
+   ⚠️ 导航栏文字颜色按首屏明暗分两套（不这样分会有一半页面看不清）：
+      · gametime / shadows 顶部是深紫、近黑 → 导航翻成白色（对底 ≥5:1）
+      · lovelyphoto 顶部是浅粉 #FF9AD5 → 沿用 pink-white.css 的深色导航
+        （#661A52 对 #FF9AD5 是 5.9:1）
+      翻白的那条带 :not(.nav-fixed)，所以**滚动之后**仍然交还给
+      #page-header.nav-fixed #nav a（白底导航条），和 pink-white.css 的分工一致。
+
+   ⚠️ 键盘可达性：卡片里那张铺满整块的 <a> 需要焦点环，用 :focus-visible 而不是
+      :focus-within —— 后者鼠标点击时也会亮，会出现「点一下留一个环」的怪现象。
+
+   ⚠️ :has() 在本节用了 6 处（与 ㉕/㉝ 同一套办法）。改选择器前先确认
+      #album-page / #album-<slug> 这几个隐藏 span 还在对应的 md 里。
+   ============================================================================ */
+
+/* ── 总览页：引导语 ─────────────────────────────────────────────────────────── */
+.album-lead {
+  margin: 4px 0 0;
+  color: #7A5A6E;
+  font-size: .95em;
+}
+
+/* ── 总览页：封面墙 ────────────────────────────────────────────────────────── */
+.album-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
+  margin: 14px 0 0;
+}
+
+.album-card {
+  overflow: hidden;
+  border: 1px solid #F6DCEE;
+  border-radius: 12px;
+  background: #FFFFFF;
+  box-shadow: 0 2px 10px rgba(175, 29, 136, .06);
+  transition: transform .3s ease, box-shadow .3s ease;
+}
+
+.album-card:hover {
+  transform: translate3d(0, -3px, 0);
+  box-shadow: 0 10px 22px rgba(175, 29, 136, .16);
+}
+
+/* 整卡可点：<a> 包住封面和正文，文字颜色一律继承卡片自己的 */
+.album-card-link,
+.album-card-link:hover {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* 封面：没有图，用渐变 + 一个半透明图标撑住，别是一块纯色。
+   aspect-ratio 让封面随卡片宽度缩放（参考站也是 4/3），不用写死高度。 */
+.album-card-cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  font-size: 38px;
+}
+
+/* 三个封面渐变。⚠️ 详情页首屏的 --album-hero-bg 必须与这里同色，
+   改一处记得改两处（首屏那组规则就在本节末尾）。 */
+.album-cover-gametime {
+  background-image: linear-gradient(135deg, #6A5AE0 0%, #8E7BFF 48%, #37C2E0 100%);
+  color: rgba(255, 255, 255, .62);
+}
+
+.album-cover-lovelyphoto {
+  background-image: linear-gradient(135deg, #FF9AD5 0%, #FFB3EB 52%, #FFD9A0 100%);
+  /* 浅底：图标也要压深一档，纯白压上去等于没有 */
+  color: rgba(107, 31, 82, .42);
+}
+
+.album-cover-shadows {
+  background-image: linear-gradient(135deg, #2B2B3C 0%, #4A3B63 55%, #7A5C8F 100%);
+  color: rgba(255, 255, 255, .55);
+}
+
+.album-card-body {
+  padding: 16px 18px 18px;
+}
+
+.album-card-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* 相册名：清掉主题给正文 h1~h6 的上下外边距（20px / 14px），卡片里不需要。
+   ⚠️ 这里是 h2 而不是 div —— 每本相册在结构上就是一个二级标题，
+      读屏可以按标题跳转；本站 toc.page 是 false（_config.butterfly.yml 第 207 行），
+      所以这些 h2 不会被塞进目录。 */
+.album-card-title-row h2 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  color: #661A52;
+  font-size: 1.2em;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.album-card-arrow {
+  flex: 0 0 auto;
+  color: #C77BAA;
+  font-size: .95em;
+  transition: transform .25s ease, color .25s ease;
+}
+
+.album-card:hover .album-card-arrow {
+  transform: translateX(4px);
+  color: #AF1D88;
+}
+
+/* 描述最多两行（参考站用 -webkit-line-clamp: 2），长短不一时卡片高度才齐 */
+.album-card-desc {
+  display: -webkit-box;
+  margin: 8px 0 0;
+  overflow: hidden;
+  color: #7A5A6E;
+  font-size: .9em;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.album-card-meta,
+.album-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  color: #9A7C8C;
+  font-size: .8em;
+}
+
+/* 「日期 • 来源」—— 分隔点由 CSS 给，md 里不用手写 */
+.album-card-meta span + span::before,
+.album-detail-meta span + span::before {
+  content: "•";
+  margin-right: 8px;
+  color: #E0B9D3;
+}
+
+.album-card-tags {
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.album-card-tags span {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #FDEFF8;
+  color: #8C1468;
+  font-size: .95em;
+  line-height: 1.7;
+}
+
+/* 键盘焦点环：卡片里的 <a> 是透明铺满的，没有环就完全看不出焦点在哪 */
+.album-card:has(.album-card-link:focus-visible) {
+  outline: 3px solid #AF1D88;
+  outline-offset: 2px;
+}
+
+/* ── 详情页：返回 / 元信息 / 标签 ───────────────────────────────────────────── */
+.album-detail-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin: 2px 0 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #F6DCEE;
+}
+
+.album-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid #F0CBE6;
+  border-radius: 999px;
+  background: #FFF8FC;
+  color: #8C1468;
+  font-size: .88em;
+  text-decoration: none;
+  transition: background-color .25s ease, border-color .25s ease, transform .25s ease;
+}
+
+.album-back:hover {
+  border-color: #AF1D88;
+  background: #FDEFF8;
+  color: #8C1468;
+  transform: translateX(-2px);
+}
+
+.album-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: #9A7C8C;
+  font-size: .82em;
+}
+
+.album-detail-meta i {
+  margin-right: 5px;
+  color: #C77BAA;
+}
+
+.album-detail-tags {
+  margin-top: 12px;
+}
+
+/* ── 详情页：照片墙 ──────────────────────────────────────────────────────────
+   多列瀑布流，保留图片原始比例（不是等宽裁切），列宽 240px 自动分列 ——
+   与参考站 .album-gallery--masonry 同一套做法（column-width + break-inside）。
+
+   ⚠️ 列布局挂在 :has(img) 上，不是常开：
+      空相册时墙里只有一句 .album-empty，若容器已经是多列，那句话会被压进
+      240px 的一列里，看着像排版坏了。有 <img> 才开列。
+   ⚠️ 现在三本相册都还没有照片，页面上的照片墙是空的（只有那句空状态）。
+      放照片的模板写在三个子页的注释里。 */
+.album-wall {
+  margin: 14px 0 0;
+}
+
+.album-wall:has(img) {
+  column-width: 240px;
+  column-gap: 12px;
+  column-fill: balance;
+}
+
+.album-wall img {
+  display: block;
+  width: 100%;
+  margin: 0 0 12px;
+  border-radius: 8px;
+  break-inside: avoid;
+  transition: transform .3s ease, filter .3s ease;
+}
+
+/* 悬停轻微放大 + 压暗，和参考站的 .album-gallery__item:hover>img 一致 */
+.album-wall img:hover {
+  transform: scale(1.025);
+  filter: brightness(.92);
+}
+
+/* 空相册的说明块 —— 三本相册现在都是这个状态。
+   裸一行字挂在正文里像页面坏了，所以给它一个虚线框的浅粉方块：
+   文字 #7A5A6E 对底 #FFF8FC 是 5.7:1，过 WCAG AA。
+   深色模式（darkmode.enable 当前为 false，全站没有开关）暂不分支。 */
+.album-empty {
+  margin: 10px 0 0;
+  padding: 30px 20px;
+  border: 1px dashed #F3C4E4;
+  border-radius: 10px;
+  background: #FFF8FC;
+  color: #7A5A6E;
+  text-align: center;
+}
+
+/* ── 详情页首屏：每本相册用自己的封面渐变 ────────────────────────────────────
+   三层，先写的在最上面：
+     1 文字 scrim    —— --album-hero-scrim，17%~78% 之间压暗（标题就在这一带）
+     2 底部接波浪色  —— 58% 起渐到 #FFB3EB，接住那 4 层粉色波浪
+     3 相册渐变      —— --album-hero-bg
+   两条小规则只做一件事：把渐变和 scrim 塞进变量，避免把这三层写三遍。 */
+html:not([data-theme='dark']):has(#album-gametime) #page-header.not-home-page,
+html:not([data-theme='dark']):has(#album-lovelyphoto) #page-header.not-home-page,
+html:not([data-theme='dark']):has(#album-shadows) #page-header.not-home-page {
+  background-image:
+    var(--album-hero-scrim),
+    linear-gradient(180deg,
+      rgba(255, 250, 252, .05) 0%,
+      rgba(255, 179, 235, 0) 58%,
+      rgba(255, 179, 235, .88) 88%,
+      #FFB3EB 100%),
+    var(--album-hero-bg);
+  background-size: cover, cover, cover;
+  background-position: center, center, center;
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  background-color: #FFB3EB;
+}
+
+/* GameTime！：紫罗兰 → 青。顶部深，导航翻白 */
+html:not([data-theme='dark']):has(#album-gametime) #page-header.not-home-page {
+  --album-hero-bg: linear-gradient(135deg, #6A5AE0 0%, #8E7BFF 48%, #37C2E0 100%);
+  --album-hero-scrim: linear-gradient(180deg,
+    rgba(24, 12, 44, 0) 17%,
+    rgba(24, 12, 44, .50) 34%,
+    rgba(24, 12, 44, .46) 56%,
+    rgba(24, 12, 44, 0) 78%);
+}
+
+/* LovelyPhoto：玫粉 → 蜜桃。顶部浅，导航保持深色；scrim 用玫红而不是近黑，
+   否则浅粉被压成灰的（压完 #BA549C 上白字 4.3:1，过 WCAG 大字线） */
+html:not([data-theme='dark']):has(#album-lovelyphoto) #page-header.not-home-page {
+  --album-hero-bg: linear-gradient(135deg, #FF9AD5 0%, #FFB3EB 52%, #FFD9A0 100%);
+  --album-hero-scrim: linear-gradient(180deg,
+    rgba(140, 20, 104, 0) 17%,
+    rgba(140, 20, 104, .62) 34%,
+    rgba(140, 20, 104, .58) 56%,
+    rgba(140, 20, 104, 0) 78%);
+}
+
+/* shadows：墨蓝黑 → 灰紫。顶部近黑，导航翻白 */
+html:not([data-theme='dark']):has(#album-shadows) #page-header.not-home-page {
+  --album-hero-bg: linear-gradient(135deg, #2B2B3C 0%, #4A3B63 55%, #7A5C8F 100%);
+  --album-hero-scrim: linear-gradient(180deg,
+    rgba(24, 12, 44, 0) 17%,
+    rgba(24, 12, 44, .42) 34%,
+    rgba(24, 12, 44, .38) 56%,
+    rgba(24, 12, 44, 0) 78%);
+}
+
+/* 导航栏翻白 —— 只给顶部是深色的那两本。
+   ⚠️ 特异性 (3,3,2) 压过 pink-white.css 的 (1,1,1)；
+      :not(.nav-fixed) 保证滚动之后交还给主题的白底导航条。 */
+html:not([data-theme='dark']):has(#album-gametime) #page-header:not(.nav-fixed) #nav a,
+html:not([data-theme='dark']):has(#album-gametime) #page-header:not(.nav-fixed) #nav .site-page,
+html:not([data-theme='dark']):has(#album-gametime) #page-header:not(.nav-fixed) #nav .site-name,
+html:not([data-theme='dark']):has(#album-gametime) #page-header:not(.nav-fixed) #nav #blog-info,
+html:not([data-theme='dark']):has(#album-shadows) #page-header:not(.nav-fixed) #nav a,
+html:not([data-theme='dark']):has(#album-shadows) #page-header:not(.nav-fixed) #nav .site-page,
+html:not([data-theme='dark']):has(#album-shadows) #page-header:not(.nav-fixed) #nav .site-name,
+html:not([data-theme='dark']):has(#album-shadows) #page-header:not(.nav-fixed) #nav #blog-info {
+  color: #FFFFFF;
+  text-shadow: 0 1px 6px rgba(40, 10, 40, .55);
+}
+
+html:not([data-theme='dark']):has(#album-gametime) #page-header:not(.nav-fixed) #nav a:hover,
+html:not([data-theme='dark']):has(#album-gametime) #page-header:not(.nav-fixed) #nav .site-page:hover,
+html:not([data-theme='dark']):has(#album-shadows) #page-header:not(.nav-fixed) #nav a:hover,
+html:not([data-theme='dark']):has(#album-shadows) #page-header:not(.nav-fixed) #nav .site-page:hover {
+  color: #FFE3F5;
+}
