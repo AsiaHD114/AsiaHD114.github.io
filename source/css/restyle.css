@@ -2749,3 +2749,85 @@ html:not([data-theme='dark']) #aside-content .card-info #card-info-btn {
 html:not([data-theme='dark']) #sidebar-menus .site-data {
   display: none;
 }
+
+/* ============================================================================
+   ㊲ 首页文章卡片 —— 文字靠左，右侧留出插图位
+   ----------------------------------------------------------------------------
+   用户给了参考站的文章卡片截图（左文右图），要求「将文字向左移动，
+   右边留出一部分空间放插图」。
+
+   先说清楚本站现状，不然容易改错地方：
+     · 五篇文章**都没有配封面**（front-matter 里没有 cover:）。
+       主题模板 themes/butterfly/layout/includes/mixins/indexPostUI.pug
+       第 11-14 行只在 article.cover 存在时才输出 .post_cover，
+       所以现在每张卡片都是纯文字、.recent-post-info 占满整行
+       （实测 class 是 "recent-post-info no-cover" → width: 100%）。
+     · 也就是说「右边那块地方」主题不会自己长出来，本节用两件事补齐：
+         ① 有封面的卡片：把封面**永远钉在右侧**（规则 ①）
+         ② 没有封面的卡片：用 ::after 画一块**插图位占位**（规则 ②）
+       以后给文章补上 cover:，② 会自动失效、真封面接管，不用回来改。
+
+   ⚠️ 主题的 index_layout: 3 是「封面左右交替」（模板第 10 行：偶数 left、奇数 right）。
+      用户要的是参考站那种固定版式，所以规则 ① 把两个方向都压成右侧。
+   ⚠️ 占位块不引入任何图片：淡粉底 + 一个内联 SVG 画的小图片图标
+      （与 ㉑ 的波浪同一种写法 —— 把 SVG 塞进 background-image 的 data URI，
+      里面的 # 必须写成 %23）。
+
+   依据（ui-ux-pro-max）：
+     · Content Jumping（High）："Reserve appropriate space" —— 插图位用固定比例
+       预留（flex-basis 34% + height 100%），以后真封面加载完也不会推挤文字。
+     · Image Scaling（Medium）：真封面走主题的 .post-bg（object-fit: cover、
+       宽高 100%），不溢出也不变形。
+     · Image Optimization（High）：以后配封面请用 WebP、单张 200~400 KB。
+   ============================================================================ */
+
+/* ① 有封面时：不管主题给的是 left 还是 right，封面一律排在文字右边 */
+html:not([data-theme='dark']) #recent-posts .recent-post-item .post_cover.left,
+html:not([data-theme='dark']) #recent-posts .recent-post-item .post_cover.right {
+  order: 1;
+}
+
+/* ② 没有封面时：右侧补一块插图位（纯 CSS，无图片文件）。
+      ⚠️ :has(.post_cover) 这个判据是「以后配了封面就自动让位」的关键，别删。
+      ⚠️ 34% 与规则 ③ 的 66% 相加正好 100%：两个都是 flex 项，
+         百分比即 flex-basis，不会互相挤压（全站 box-sizing: border-box）。 */
+html:not([data-theme='dark']) #recent-posts .recent-post-item:not(:has(.post_cover))::after {
+  content: '';
+  order: 1;
+  flex: 0 0 34%;
+  height: 100%;
+  background-color: #FDEFF8;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect x='3' y='5' width='18' height='14' rx='2.5' fill='none' stroke='%23E7A9D2' stroke-width='1.5'/><circle cx='8.5' cy='10' r='1.7' fill='%23E7A9D2'/><path d='M4.2 17.2l4.6-4.4 3.2 3 2.5-2.3 5.3 4.4' fill='none' stroke='%23E7A9D2' stroke-width='1.5' stroke-linejoin='round'/></svg>"),
+    linear-gradient(135deg, #FFFFFF 0%, #FDEFF8 48%, #FBD4EE 100%);
+  background-repeat: no-repeat, no-repeat;
+  background-position: center, center;
+  background-size: 40px 40px, cover;
+}
+
+/* ③ 文字列让位给右侧插图位（主题给 .no-cover 的是 100%） */
+html:not([data-theme='dark']) #recent-posts .recent-post-item > .recent-post-info.no-cover {
+  width: 66%;
+}
+
+/* ④ 窄屏（主题在这一档把卡片竖过来：flex-direction: column、height: auto，
+      真封面此时变成顶部 230px 的大图）。占位块不跟着上去 ——
+      它是「等图的位置」，在手机上摆一块 230px 的淡粉空盒子只会白占首屏，
+      所以收掉，文字恢复整行宽。真封面仍按主题的行为显示在顶部。 */
+@media (max-width: 768px) {
+  html:not([data-theme='dark']) #recent-posts .recent-post-item:not(:has(.post_cover))::after {
+    display: none;
+  }
+
+  html:not([data-theme='dark']) #recent-posts .recent-post-item > .recent-post-info.no-cover {
+    width: 100%;
+  }
+
+  /* 竖排时封面回到顶部。主题只把 .post_cover.right 的 order 归零，
+     规则 ① 会把 .left 也设成 1，所以这里两个方向一起归零 ——
+     不写这条的话，带 .left 的封面会跑到文字**下面**去。 */
+  html:not([data-theme='dark']) #recent-posts .recent-post-item .post_cover.left,
+  html:not([data-theme='dark']) #recent-posts .recent-post-item .post_cover.right {
+    order: 0;
+  }
+}
