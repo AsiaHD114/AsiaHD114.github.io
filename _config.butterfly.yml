@@ -297,7 +297,16 @@ aside:
     category: true
   card_author:
     enable: true
-    description:
+    # 侧栏作者卡里「名字」下面那行字 —— 现在放的是座右铭（语录）。
+    # 参考站 blog.fqzlr.top 的作者卡也是「头像 → 名字 → 一句座右铭 → 图标」的结构。
+    #
+    # ⚠️ 这一行原来是空的，卡片上那个位置显示的是「文章 / 标签 / 分类」三个数字，
+    #    那三个数字已在 source/css/restyle.css 的 ㊱ 节里隐掉，位置让给这句话。
+    # ⚠️ 换句子**只改这一行**，CSS 不用动；留空的话，㊱ 里那条装饰短线也会一起消失
+    #    （那里有 :not(:empty) 守卫）。
+    # ⚠️ 值用双引号包起来：这句话里有全角逗号，加引号能避免以后手改成半角冒号、
+    #    井号之类时被 YAML 当成语法。
+    description: "山有木兮木有枝，心悦君兮君不知" # 出自《越人歌》
     button:
       enable: true
       icon: fab fa-github

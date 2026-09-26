@@ -2674,3 +2674,67 @@ html:not([data-theme='dark']) #pagination .pagination-related .info.text-right::
     transform: none;
   }
 }
+
+/* ============================================================================
+   ㊱ 侧栏作者卡 —— 去掉「文章 / 标签 / 分类」，换成一句语录
+   ----------------------------------------------------------------------------
+   用户给了参考站 blog.fqzlr.top 的作者卡截图（头像 → 名字 → 一句座右铭 → 图标），
+   要求「将我的博客的这些分类去掉，换成语录」，并在两个选项里选了
+   **固定一句座右铭**（不是轮播）。
+   文案写在 _config.butterfly.yml 的 aside.card_author.description 里 ——
+   **换句子只改那一行**，本节一个字都不用动。
+
+   ⚠️ 为什么只隐掉、不改模板：
+      那三个数字是主题模板 themes/butterfly/layout/includes/widget/card_author.pug
+      第 8-17 行写死的，没有对应的配置开关；而本站的规矩是 themes/ 一个字不改
+      （这样以后能直接 git pull 覆盖主题、升级不冲突）。所以用一条 display: none 隐掉。
+   ⚠️ 它们是**链接**（/archives/、/tags/、/categories/），不是纯数字 ——
+      隐掉不丢导航：桌面导航栏「博文」下拉里就有同样三项；
+      手机抽屉（#sidebar-menus）里那份独立的 .site-data 也没有动，仍然在。
+
+   ⚠️ 语录本来就有现成的坑位，不用新加元素：
+      模板第 6 行 `.author-info-description` =
+      `theme.aside.card_author.description || config.description`，
+      以前配置里是空的，所以那行一直空白 —— 现在把配置填上就显示出来了。
+      主题给它的规则是 `margin-top: -0.42em`（贴着名字用的），本节覆盖成正值，
+      好给上面那条装饰短线腾出位置。
+
+   ⚠️ `.author-info-description:not(:empty)` 这个守卫别删：
+      哪天配置清空，卡片上就只剩一条孤零零的短线，看着像坏了。
+
+   对比度：语录 #6B5560 压在白卡上约 6.4:1，过 WCAG AA（正文 4.5:1）。
+   字体沿用主题给这一块设的 Smiley Sans（与首页副标题同一套），不另设字体。
+   ============================================================================ */
+
+/* ① 隐掉「文章 / 标签 / 分类」三个数字（display:none 会连它们占的高度一起去掉） */
+html:not([data-theme='dark']) #aside-content .card-info .site-data {
+  display: none;
+}
+
+/* ② 语录：与名字拉开距离，上方一条居中的短横线（参考站那条） */
+html:not([data-theme='dark']) #aside-content .card-info .author-info-description {
+  position: relative;
+  margin: 20px 0 0;
+  padding-top: 18px;
+  color: #6B5560;        /* 比名字浅一档：层次交给字号和颜色，不靠加粗 */
+  font-size: .95em;
+  line-height: 1.9;      /* 中文排两行时别挤在一起 */
+}
+
+html:not([data-theme='dark']) #aside-content .card-info .author-info-description:not(:empty)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 26px;
+  height: 3px;
+  margin-left: -13px;    /* 负半宽 = 水平居中，比 transform 少一层合成 */
+  border-radius: 2px;
+  background-color: #F2A6DA;
+}
+
+/* ③ 三个数字消失后，原本靠 .site-data 的 margin 撑开的间距也跟着没了，
+      这里把按钮的上边距补回来，别让 Follow Me 贴到语录上。 */
+html:not([data-theme='dark']) #aside-content .card-info #card-info-btn {
+  margin-top: 22px;
+}
