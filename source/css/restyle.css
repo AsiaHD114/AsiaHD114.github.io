@@ -2518,3 +2518,159 @@ html:not([data-theme='dark']):has(#album-shadows) #page-header:not(.nav-fixed) #
 html:not([data-theme='dark']):has(#album-shadows) #page-header:not(.nav-fixed) #nav .site-page:hover {
   color: #FFE3F5;
 }
+
+/* ============================================================================
+   ㉟ 文章底部「上一篇 / 下一篇」—— 改成参考站那两张独立圆角卡片
+   ----------------------------------------------------------------------------
+   用户给了参考站文章页的截图（blog.fqzlr.top 的上一篇/下一篇），要求
+   「参照这个样式，修改上下篇文字的选择框」。
+
+   参考图的三个特征就是本节的靶子：
+     · **两张独立的圆角卡片**，中间留缝 —— 不是现在这样一整条通栏
+     · 卡片里**只有一行标题**，超长用省略号截断；方向交给外侧的箭头
+     · 箭头在外侧（上一篇在左、下一篇在右），与文字同一个水平中线
+
+   ⚠️ 这是**覆盖 ㉖**，不是删掉 ㉖：
+      ㉖ 的「方案 A（去掉方框）」正是被用户这次否掉的东西，但 ㉖ 里那条
+      「箭头外滑 + 文字加深」的悬停反馈、以及 ⑰ 的箭头本体都还要用。
+      所以本节只做三件事：把面加回来、拆成两张、把标签收掉。
+
+   ⚠️ 为什么现在是"面没了、粉还在"的一条通栏（改之前先看懂这段，不然容易改错）：
+      ㉖ 把 `.pagination-related` 的 `background` 设成了 none、`border-radius` 设成 0，
+      于是两张卡片首尾相接变成一条通栏；可那条粉**并不来自卡片底色，而来自
+      模板给每张卡塞的 `.cover`** —— 无封面图时它的行内底色是主题色 #AF1D88，
+      主题又给它 opacity: .4，40% 洋红压在白色文章卡上就是那条淡粉。
+      本节直接关掉 .cover，底色改由卡片自己给。
+
+   ⚠️ 「上一篇 / 下一篇」这两个字**不删**，只是视觉上藏起来（sr-only）：
+      参考图里没有它们，方向交给箭头；但读屏用户失去这两个字就只剩一个
+      孤零零的标题，所以保留在无障碍树里。
+
+   ⚠️ 卡片的底色/描边/悬停**与 ㉘（相关推荐）逐值相同**：
+      主题里这两块本来就是同一个组件（同一个 .pagination-related），
+      观感必须一致，不在这里新造第二种卡片语言。
+   ============================================================================ */
+
+/* ① 容器：拆成两张卡 + 中间留缝。
+      同时撤掉 ㉖ ② 那条发丝线与 overflow —— 有卡片面了，发丝线是多余的收尾；
+      overflow:hidden 会把卡片悬停上抬的那 2px 裁掉。 */
+html:not([data-theme='dark']) #pagination.pagination-post {
+  gap: 16px;
+  overflow: visible;
+  border-radius: 0;          /* 圆角交给两张卡片自己 */
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-top: 32px;
+}
+
+/* ② 卡片本体：高度收到 84px（参考图约 86px），面与 ㉘ 同值 */
+html:not([data-theme='dark']) #pagination .pagination-related {
+  height: 84px;
+  border-radius: 12px;
+  background: rgba(253, 239, 248, .55);
+  box-shadow: inset 0 0 0 1.5px rgba(251, 212, 238, .9);
+  transition: box-shadow .25s ease, background-color .25s ease, transform .25s ease;
+}
+
+/* ③ 关掉封面层（模板塞的 .cover，无封面图时它只会把卡片染成粉） */
+html:not([data-theme='dark']) #pagination .pagination-related .cover {
+  display: none;
+}
+
+/* ④ 悬停：与 ㉘ 逐值相同（半透明 → 几乎实白 + 粉描边 + 轻抬） */
+html:not([data-theme='dark']) #pagination .pagination-related:hover {
+  background: rgba(255, 255, 255, .92);
+  box-shadow: inset 0 0 0 1.5px #F79FDD,
+              0 6px 16px -8px rgba(175, 29, 136, .28);
+  transform: translateY(-2px);
+}
+
+/* ⑤ 「上一篇 / 下一篇」隐去但留给读屏。
+      ⚠️ 用这套 clip/clip-path 而不是 display:none 或 visibility:hidden ——
+         后两者会把文字从无障碍树里一并拿掉，那就白留了。 */
+html:not([data-theme='dark']) #pagination .pagination-related .info .info-1 .info-item-1 {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ⑥ 文字：两张卡都从左边起排，各自给外侧的箭头让位。
+      ⚠️ 先把 ⑰ 加在 .info 上的 44px 内边距清掉 ——
+         .info-1 是绝对定位、靠"静态位置"落在 .info 的内容盒里，
+         所以 .info 的 padding 会整体推移文字，不清掉会叠加成 100px 以上。 */
+html:not([data-theme='dark']) #pagination .pagination-related .info:not(.text-right),
+html:not([data-theme='dark']) #pagination .pagination-related .info.text-right {
+  padding: 0;
+}
+
+html:not([data-theme='dark']) #pagination .pagination-related .info .info-1 {
+  padding: 0 24px;
+}
+
+html:not([data-theme='dark']) #pagination .pagination-related .info:not(.text-right) .info-1 {
+  padding-left: 58px;        /* 左侧箭头的位置 + 箭头的宽度 + 间距 */
+}
+
+html:not([data-theme='dark']) #pagination .pagination-related .info.text-right .info-1 {
+  padding-right: 58px;       /* 同上，箭头在右 */
+  text-align: left;          /* 参考图里两张卡的文字都从左边起排 */
+}
+
+/* ⑦ 标题：单行 + 超长省略号。主题给的是 -webkit-box + line-clamp，
+      这里换成 block + text-overflow（line-clamp 与 text-overflow 不共存）。 */
+html:not([data-theme='dark']) #pagination .pagination-related .info .info-1 .info-item-2 {
+  display: block;
+  overflow: hidden;
+  color: #661A52;
+  font-size: 1.02em;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: unset;
+}
+
+/* ⑧ 箭头：位置外移到 24px（⑰ 原来贴在 16px，参考图更靠里一点），
+      颜色用站点悬停深玫红 #8C1468（对卡面 #FEF6FB 约 8:1）；
+      悬停再压到 #661A52 —— 这一步 ⑰ 已经有了，不用重写。
+      尺寸与 ⑰ 的轮换逻辑保持一致，只改大小。 */
+html:not([data-theme='dark']) #pagination .pagination-related .info::after {
+  width: 9px;
+  height: 9px;
+  border-color: #8C1468;
+}
+
+html:not([data-theme='dark']) #pagination .pagination-related .info:not(.text-right)::after {
+  left: 24px;
+}
+
+html:not([data-theme='dark']) #pagination .pagination-related .info.text-right::after {
+  right: 24px;
+}
+
+/* ⑨ 窄屏：主题会把两张卡竖着堆起来（flex-direction: column），
+      gap 16px 继续生效；高度跟着收一点。 */
+@media (max-width: 768px) {
+  html:not([data-theme='dark']) #pagination .pagination-related {
+    height: 78px;
+  }
+  html:not([data-theme='dark']) #pagination .pagination-related .info:not(.text-right) .info-1 {
+    padding-left: 52px;
+  }
+  html:not([data-theme='dark']) #pagination .pagination-related .info.text-right .info-1 {
+    padding-right: 52px;
+  }
+}
+
+/* ⑩ 减少动效：取消上抬，颜色与描边反馈保留（不然悬停就没反馈了） */
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-theme='dark']) #pagination .pagination-related:hover {
+    transform: none;
+  }
+}
