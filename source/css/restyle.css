@@ -2114,24 +2114,33 @@ html:not([data-theme='dark']):has(#message-page) #page-header.not-home-page {
       rgba(255, 246, 251, .05) 34%,
       rgba(253, 239, 248, .10) 70%,
       rgba(255, 179, 235, .70) 100%),
-    /* 中层：斜向粉色，把照片的橙紫调往站点色系轻轻带一下 */
+    /* 中层：斜向粉色。
+       ⚠️ 只有这一层被调淡（.07/.04/.11 → .03/.02/.05），竖向那层与㉕保持一致不动。
+       原因：这张图比相册那张暗得多，同样强度的粉层会把近黑的树与山整体抬成藕紫，
+       观感明显比原图"灰"。斜向层正是往暗部上色的主力，所以只削它。
+       削完仍保留一点点粉调（不是 0），照片才不会从站点配色里跳出去。 */
     linear-gradient(135deg,
-      rgba(255, 211, 240, .07) 0%,
-      rgba(255, 179, 235, .04) 50%,
-      rgba(253, 239, 248, .11) 100%),
+      rgba(255, 211, 240, .03) 0%,
+      rgba(255, 179, 235, .02) 50%,
+      rgba(253, 239, 248, .05) 100%),
     /* 底层：照片 */
     url('/img/message-hero.webp');
   background-size: cover, cover, cover;
-  /* 第三层取景偏上：保住太阳、湖面和那只鹿，同时把近黑的底部推出可视区 */
-  background-position: center top, center top, center 30%;
+  /* 第三层取景：center 62%（原为 30%）。
+     ⚠️ 这里订正我先前写错的一处注释：30% 那版写的是"保住太阳、湖面和那只鹿"，
+        但实测**鹿根本看不见** —— 它在原图 y≈700，而 30% 的取景配上这个高度的 hero，
+        可视区下沿大约只到原图 y≈700，鹿正好落在底部那条渐到 #FFB3EB 的粉色带上，
+        被糊掉了。注释写了"保住鹿"而实际没有，是当时没有逐帧核对取景范围导致的。
+        改到 62% 后可视区整体下移：太阳上移到导航下方，湖面与鹿一起进来。 */
+  background-position: center top, center top, center 62%;
   background-repeat: no-repeat, no-repeat, no-repeat;
   background-color: #FFFAFC;
 }
 
-/* 窄屏：取景再上移一点，别把鹿和湖切掉 */
+/* 窄屏：按与上面相同的偏移量下移（22% → 54%），别把鹿和湖切掉 */
 @media (max-width: 768px) {
   html:not([data-theme='dark']):has(#message-page) #page-header.not-home-page {
-    background-position: center top, center top, center 22%;
+    background-position: center top, center top, center 54%;
   }
 }
 
