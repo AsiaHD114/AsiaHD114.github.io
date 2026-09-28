@@ -2927,17 +2927,24 @@ html:not([data-theme='dark']) #recent-posts .recent-post-item:not(:has(.post_cov
    --------------------------------------------------------------------------- */
 
 /* ============================================================================
-   ㊳ 首页分类筛选条 —— 参考 blog.fqzlr.top 首屏那一条
+   ㊳ 首页快捷入口条 —— 归档 / 分类 / 友链
    ----------------------------------------------------------------------------
-   结构由 scripts/home-cat-bar.js 注入（首页独有，主题目录不动）：
-     <nav id="home-cat-bar">
-       <a class="home-cat-chip home-cat-chip--home">🏠</a>
-       <a class="home-cat-chip">归档</a>
-       <a class="home-cat-chip">技术<span class="home-cat-count">5</span></a>
-       …
+   结构由 scripts/home-nav-bar.js 注入（首页独有，主题目录不动）：
+     <nav id="home-nav-bar" aria-label="快捷入口">
+       <a class="home-nav-chip" href="/archives/">归档</a>
+       <a class="home-nav-chip" href="/categories/">分类</a>
+       <a class="home-nav-chip" href="/link/">友链</a>
+     </nav>
    配色全部取自既有色板：底 #FFFAFC / 描边 #FBD4EE / 字 #661A52 /
-   计数 #8A6E78 / 悬停 #FDEFF8 + #F79FDD 边 + #AF1D88 字 /
-   首页钮实底 #AF1D88 + 白图标（与分页、按钮同一个值）。
+   悬停 #FDEFF8 + #F79FDD 边 + #AF1D88 字。
+
+   ⚠️ 这一条改过一次形态，记一笔免得以后看不懂：
+      第一版（commit 81abaae）是照 blog.fqzlr.top 做的「首页图标 + 归档 +
+      各分类胶囊（带文章数）」，数据取 hexo.locals 里的分类。
+      用户随后指定只要三个入口，于是分类胶囊、文章计数、首页圆钮全部去掉，
+      脚本与 id 也从 cat-bar 改名成 nav-bar —— 它已经不再是「分类」条了，
+      留着旧名只会误导后来的人。
+      所以下面**没有** .home-cat-count / .home-cat-chip--home 这类规则了。
 
    ⚠️ 两个必须写对的布局点：
      ① flex: 0 0 100% + grid-column: 1 / -1 —— 双保险。
@@ -2948,14 +2955,14 @@ html:not([data-theme='dark']) #recent-posts .recent-post-item:not(:has(.post_cov
         依据 ui-ux-pro-max「Responsive / Horizontal Scroll」（High 严重级）：
         「Avoid horizontal scrolling —— Ensure content fits viewport width」，
         Don't 一栏明确写着「Horizontal scrollbar on mobile」。
-        所以窄屏时胶囊换行，而不是做成可横滑的一行。本站分类只有 3 个，
-        换行完全放得下，没必要为它引入横滑。
+        目前只有三个条目，任何宽度都放得下；保留 wrap 是为了以后加条目时
+        不会突然冒出一条横向滚动条。
 
-   ⚠️ 触控目标 44px（ui-ux-pro-max 优先级 2）：胶囊 min-height 44、首页圆钮 44×44。
-      比参考站那种 40px 略高，是为了达标，不是为了好看。
+   ⚠️ 触控目标 44px（ui-ux-pro-max 优先级 2）：胶囊 min-height 44。
+      比参考站那种约 40px 略高，是为了达标，不是为了好看。
    --------------------------------------------------------------------------- */
 
-#home-cat-bar {
+#home-nav-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -2966,14 +2973,13 @@ html:not([data-theme='dark']) #recent-posts .recent-post-item:not(:has(.post_cov
   grid-column: 1 / -1;
 }
 
-#home-cat-bar .home-cat-chip {
+#home-nav-bar .home-nav-chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
   box-sizing: border-box;
   min-height: 44px;
-  padding: 0 16px;
+  padding: 0 20px;
   border: 1px solid #FBD4EE;
   border-radius: 22px;
   background: #FFFAFC;
@@ -2985,47 +2991,16 @@ html:not([data-theme='dark']) #recent-posts .recent-post-item:not(:has(.post_cov
               color .2s ease, box-shadow .2s ease;
 }
 
-/* 计数：比分类名浅一级，做层次 —— 与 ⑰ 那里「标签比文章名浅」同一套做法 */
-#home-cat-bar .home-cat-count {
-  color: #8A6E78;
-  font-size: .88em;
-  font-variant-numeric: tabular-nums;
-}
-
-/* 首页圆钮：实底主色 + 白图标。宽度锁 44，配 50% 圆角才是正圆
-   （给了左右 padding 就会变成椭圆，所以这条单独写）。 */
-#home-cat-bar .home-cat-chip--home {
-  width: 44px;
-  padding: 0;
-  border-color: #AF1D88;
-  border-radius: 50%;
-  background: #AF1D88;
-  color: #FFFFFF;
-}
-
 /* 悬停与键盘聚焦同一套反馈 */
-#home-cat-bar .home-cat-chip:hover,
-#home-cat-bar .home-cat-chip:focus-visible {
+#home-nav-bar .home-nav-chip:hover,
+#home-nav-bar .home-nav-chip:focus-visible {
   border-color: #F79FDD;
   background: #FDEFF8;
   color: #AF1D88;
 }
 
-#home-cat-bar .home-cat-chip:hover .home-cat-count,
-#home-cat-bar .home-cat-chip:focus-visible .home-cat-count {
-  color: #AF1D88;
-}
-
-/* 首页钮的悬停不能翻成浅底白图标（会看不见），改成加深一档 */
-#home-cat-bar .home-cat-chip--home:hover,
-#home-cat-bar .home-cat-chip--home:focus-visible {
-  border-color: #8C1468;
-  background: #8C1468;
-  color: #FFFFFF;
-}
-
 /* 焦点环：白底上玫红环保守够用，再垫一圈淡粉光晕 */
-#home-cat-bar .home-cat-chip:focus-visible {
+#home-nav-bar .home-nav-chip:focus-visible {
   outline: 2px solid #AF1D88;
   outline-offset: 2px;
   box-shadow: 0 0 0 5px rgba(253, 239, 248, .9);
