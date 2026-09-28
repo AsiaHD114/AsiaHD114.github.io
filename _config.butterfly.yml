@@ -109,7 +109,17 @@ background:
 cover:
   # 是否禁用封面
   index_enable: true
-  aside_enable: true
+  # 侧栏「最新文章」不显示封面缩略图（用户 2026-09-26 要求「这里的文章不显示图片」）。
+  #
+  # 起因：侧栏那个列表里只有 hello-world 一条带图，因为**只有它在 front-matter 里
+  # 写了 cover: /img/posts/hello-world/cover.jpg**，另外 4 篇都没有 cover。
+  # 而主题的判据是「有 cover 才输出缩略图」，所以列表看起来一半有一半没有。
+  # 用户要的是「这里统一不显示」，所以关掉这个开关，而不是去给另外 4 篇补图。
+  #
+  # 这是主题的原生开关，与归档页那次（archives_enable: false）同一个套路：
+  # 关掉之后主题会给每个条目加 .no-cover，并不再输出 .thumbnail > img。
+  # ⚠️ 只影响侧栏；首页文章卡片（index_enable）照旧。
+  aside_enable: false
   # 归档页不显示封面缩略图（用户 2026-09-26 明确要求「归档处不显示图片」）。
   # 这是主题的原生开关：article-sort.pug 第 6 行判 !theme.cover.archives_enable
   # 就给条目加 .no-article-cover、第 12 行直接不输出 .article-sort-item-img，
