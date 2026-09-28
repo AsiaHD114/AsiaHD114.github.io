@@ -11,7 +11,7 @@ comments: false
 
   版式参考 https://blog.fqzlr.top/albums/ （用户给的参考站）：
       封面 → 相册名 + 箭头 → 一句描述 → 日期 · 来源 → 标签
-  配色没有照抄，全部回到本站的粉色系；封面也没有图片，是渐变 + 一个图标。
+  配色没有照抄，全部回到本站的粉色系；封面用各相册的第一张照片铺满，渐变留在底下当兜底。
 
   ── 一、这一页在干什么 ---------------------------------------------------------
   .album-grid 里是三张卡片，整张卡片可点，点进去是那本相册的详情页：
@@ -28,9 +28,10 @@ comments: false
 
     ① 主题的 galleryGroup 标签**强制输出一张封面图**
          <img class="gallery-group-img" src='...'>
-       而本站现在没有任何相册照片。封面参数只能留空，src='' 在浏览器里不等于
+       当年一张相册照片都没有，封面参数只能留空；src='' 在浏览器里不等于
        「没有图」—— 按 HTML 规范它会被解析成**当前页面地址**，卡片上要么是
-       破图图标，要么白跑一次请求。
+       破图图标，要么白跑一次请求。现在有照片了，但下面 ② 的结构差异依旧成立，
+       所以继续用手写卡片。
 
     ② 参考站的卡片是「上图下文」两段式，主题标签是「把名字压在图上」的悬停式，
        结构本来就不一样，硬套标签反而要写一堆覆盖样式。
@@ -39,12 +40,15 @@ comments: false
     不依赖主题的 gallery.styl。以后想换回主题标签也行，但那样就得放弃现在的版式。
 
   ── 三、往卡片里加/删相册 ------------------------------------------------------
-  复制一整块 <article class="album-card">…</article>，改四处：
+  复制一整块 <article class="album-card">…</article>，改三处：
       · <a href> 和 aria-label
-      · 封面的类名（album-cover-xxx，渐变在 ㉞ 里定义）
-      · 封面图标 <i class="fas fa-xxx">
+      · 封面的类名（album-cover-xxx，渐变在 ㉞ 里定义）+ 封面图 src
       · 名字 / 描述 / 日期 / 标签
-  文件末尾那份注释里还留着模板。
+  ⚠️ 封面图必须带 class="no-lightbox"。
+      fancybox 会把 #article-container 里所有 img:not(.no-lightbox) 包成 <a>，
+      而封面图本来就在整卡那个 <a class="album-card-link"> 里面 —— 再包一层就成了
+      <a> 套 <a>（非法嵌套），浏览器会提前闭合外层，整张卡的可点区域就断了。
+      详情页照片墙里的图不用加，那些图本来就该点开放大。
 
   ── 四、每本相册的详情页 --------------------------------------------------------
   source/album/gametime/index.md、source/album/lovelyphoto/index.md、
@@ -79,7 +83,7 @@ comments: false
 <div class="album-grid">
 <article class="album-card">
 <a class="album-card-link" href="/album/gametime/" aria-label="打开相册：GameTime！">
-<div class="album-card-cover album-cover-gametime" aria-hidden="true"><i class="fas fa-gamepad"></i></div>
+<div class="album-card-cover album-cover-gametime" aria-hidden="true"><img class="no-lightbox" src="/img/album/gametime/01.webp" alt=""></div>
 <div class="album-card-body">
 <div class="album-card-title-row"><h2>GameTime！</h2><i class="fas fa-arrow-right album-card-arrow" aria-hidden="true"></i></div>
 <p class="album-card-desc">游戏时光</p>
@@ -90,7 +94,7 @@ comments: false
 </article>
 <article class="album-card">
 <a class="album-card-link" href="/album/lovelyphoto/" aria-label="打开相册：LovelyPhoto">
-<div class="album-card-cover album-cover-lovelyphoto" aria-hidden="true"><i class="fas fa-heart"></i></div>
+<div class="album-card-cover album-cover-lovelyphoto" aria-hidden="true"><img class="no-lightbox" src="/img/album/lovelyphoto/01.webp" alt=""></div>
 <div class="album-card-body">
 <div class="album-card-title-row"><h2>LovelyPhoto</h2><i class="fas fa-arrow-right album-card-arrow" aria-hidden="true"></i></div>
 <p class="album-card-desc">可爱日常</p>
@@ -101,7 +105,7 @@ comments: false
 </article>
 <article class="album-card">
 <a class="album-card-link" href="/album/shadows/" aria-label="打开相册：shadows">
-<div class="album-card-cover album-cover-shadows" aria-hidden="true"><i class="fas fa-moon"></i></div>
+<div class="album-card-cover album-cover-shadows" aria-hidden="true"><img class="no-lightbox" src="/img/album/shadows/01.webp" alt=""></div>
 <div class="album-card-body">
 <div class="album-card-title-row"><h2>shadows</h2><i class="fas fa-arrow-right album-card-arrow" aria-hidden="true"></i></div>
 <p class="album-card-desc">光影与暗调</p>
