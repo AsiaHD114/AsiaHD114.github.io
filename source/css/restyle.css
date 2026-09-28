@@ -2896,40 +2896,24 @@ html:not([data-theme='dark']) #recent-posts .recent-post-item:not(:has(.post_cov
   }
 }
 
-/* ⑥ 封面加一层「模糊 + 粉」的滤镜（用户要求：「做一层模糊处理（粉色滤镜）」）。
-   只对 .post_cover 里那张真封面生效：占位块（规则 ②）本来是淡粉渐变，再糊一层没意义。
-   全站目前只有 hello-world 配了封面，以后新配的封面自动套用，不用回来改。
+/* ⑥ 封面「模糊 + 粉」滤镜 —— 已移除（用户 2026-09-28：「去掉朦胧效果吧」）
+   ----------------------------------------------------------------------------
+   这里原本有三条规则（由 commit e95cd58 加入，当时用户要求「做一层模糊处理（粉色滤镜）」）：
 
-   拆成两件事，各管一项：
-     · 糊 —— filter 加在 <img class="post-bg"> 上，**不加在 .post_cover 上**。
-       槽（.post_cover，34%×100%）自己 overflow: hidden（主题 homepage.styl 第 44 行），
-       滤镜放在图片上，溢出的部分由槽裁掉；放在槽上则连槽的四条边一起糊，
-       上/右/下三边会透出卡片白底，看着像图没铺满。
-     · 粉 —— .post_cover::after 一层粉紫渐变罩上去。
-       ⚠️ position: relative 别删：伪元素是 absolute，槽本身是 static，
-          不补这条的话 inset: 0 会对着最近的非 static 祖先（.recent-post-item）铺开，
-          整张卡片连文字一起染粉。
-       ⚠️ pointer-events: none 别删：这层正好盖在封面的 <a> 上，不关掉点图就跳不动了。
-       ⚠️ 这层不用单独写遮罩：规则 ④ 的 mask 挂在 .post_cover 上，
-          对伪元素一样生效，粉层与图片的羽化边界是同一条。
+     #recent-posts .recent-post-item .post_cover          { position: relative }
+     #recent-posts .recent-post-item .post_cover::after   { position: absolute; inset: 0;
+         background-image: linear-gradient(140deg, rgba(255,176,214,.2) 0%, rgba(255,240,248,.14) 100%) }
+     #recent-posts .recent-post-item .post_cover .post-bg { filter: blur(1.2px) saturate(1.1) brightness(1.04) contrast(.96) }
 
-   参数依据：1.2px 是「看得出糊、五官和花束还认得出」的档（2px 脸就发虚了）；
-   粉层两端各带透明度（.2 / .14）——是「染一层粉」，不是「盖一块粉色板」。
-   主题 .imgHover 本来就带 transition: filter 375ms（_global/function.styl 第 38 行），
-   以后调强度直接改这两个值即可，过渡不用另写。 */
+   合起来就是「图发虚 + 整体泛粉白」，也就是用户说的"朦胧"。
+   现在三条一并删掉，封面回到原图的清晰度与色彩。cover.jpg 原图一个字节都没改过，
+   想恢复只需把上面三条照抄回来。
 
-html:not([data-theme='dark']) #recent-posts .recent-post-item .post_cover {
-  position: relative;
-}
+   ⚠️ 连 position: relative 也一起删了 —— 它当初唯一的作用是给那个绝对定位的伪元素
+      做定位参照，伪元素没了它就只剩副作用风险（把 .post_cover 变成绝对定位后代的
+      包含块，可能改变槽内元素的定位基准）。删后卡片版式已用截图复核，无位移。
 
-html:not([data-theme='dark']) #recent-posts .recent-post-item .post_cover::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: linear-gradient(140deg, rgba(255, 176, 214, .2) 0%, rgba(255, 240, 248, .14) 100%);
-  pointer-events: none;
-}
-
-html:not([data-theme='dark']) #recent-posts .recent-post-item .post_cover .post-bg {
-  filter: blur(1.2px) saturate(1.1) brightness(1.04) contrast(.96);
-}
+   ⚠️ 刻意**没有**动的：规则 ④⑤ 的那条 mask（封面左缘的羽化过渡）。
+      它是照着 blog.fqzlr.top 做的「图片与文字交界处的柔和过渡」，属于边界处理，
+      不是"朦胧"本身。如果你要连它一起去掉，说一声。
+   --------------------------------------------------------------------------- */
