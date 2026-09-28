@@ -74,7 +74,7 @@ comments: false
 -->
 <span id="album-page" hidden></span>
 
-<p class="album-lead">记录游戏、日常与光影的三本相册。照片还在路上。</p>
+<p class="album-lead">记录游戏、日常与光影的三本相册。</p>
 
 <div class="album-grid">
 <article class="album-card">

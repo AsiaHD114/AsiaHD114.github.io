@@ -2419,8 +2419,8 @@ html:not([data-theme='dark']):has(#message-page) #page-header.not-home-page {
    ⚠️ 列布局挂在 :has(img) 上，不是常开：
       空相册时墙里只有一句 .album-empty，若容器已经是多列，那句话会被压进
       240px 的一列里，看着像排版坏了。有 <img> 才开列。
-   ⚠️ 现在三本相册都还没有照片，页面上的照片墙是空的（只有那句空状态）。
-      放照片的模板写在三个子页的注释里。 */
+   ⚠️ 三本相册现在各有 1 张照片（/img/album/<相册>/01.webp），:has(img) 是生效状态。
+      空相册那份 .album-empty 兜底还留着，给以后新增的相册用。 */
 .album-wall {
   margin: 14px 0 0;
 }
@@ -2429,6 +2429,14 @@ html:not([data-theme='dark']):has(#message-page) #page-header.not-home-page {
   column-width: 240px;
   column-gap: 12px;
   column-fill: balance;
+}
+
+/* ⚠️ 只有一张照片时不开多列。
+   786px 的容器按 240px 分列会被挤成 3 栏，那单张图就只占左栏 254px，
+   右边空一大片、看着像排版坏了（实测 getBoundingClientRect：img 254px / 容器 786px）。
+   只有一张就让它铺满整行；加到两张以上 :only-of-type 失效，自动回到瀑布流。 */
+.album-wall:has(img:only-of-type) {
+  column-width: auto;
 }
 
 .album-wall img {
@@ -2446,7 +2454,7 @@ html:not([data-theme='dark']):has(#message-page) #page-header.not-home-page {
   filter: brightness(.92);
 }
 
-/* 空相册的说明块 —— 三本相册现在都是这个状态。
+/* 空相册的说明块 —— 三本相册现在都有照片了，这条规则留着给以后新增的空相册用。
    裸一行字挂在正文里像页面坏了，所以给它一个虚线框的浅粉方块：
    文字 #7A5A6E 对底 #FFF8FC 是 5.7:1，过 WCAG AA。
    深色模式（darkmode.enable 当前为 false，全站没有开关）暂不分支。 */
