@@ -110,7 +110,12 @@ cover:
   # 是否禁用封面
   index_enable: true
   aside_enable: true
-  archives_enable: true
+  # 归档页不显示封面缩略图（用户 2026-09-26 明确要求「归档处不显示图片」）。
+  # 这是主题的原生开关：article-sort.pug 第 6 行判 !theme.cover.archives_enable
+  # 就给条目加 .no-article-cover、第 12 行直接不输出 .article-sort-item-img，
+  # 归档版式自己会收成 80px 的文字行（archives.styl 第 64 行），不用改 CSS。
+  # ⚠️ 只影响归档页；首页卡片（index_enable）与侧栏最新文章（aside_enable）照旧。
+  archives_enable: false
   # 文章没有设置封面时，显示这里的默认封面
   default_cover:
     # - xxx.jpg
