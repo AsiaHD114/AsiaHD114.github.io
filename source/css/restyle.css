@@ -2824,13 +2824,52 @@ html:not([data-theme='dark']) #recent-posts .recent-post-item > .recent-post-inf
   width: 66%;
 }
 
-/* ④ 窄屏（主题在这一档把卡片竖过来：flex-direction: column、height: auto，
+/* ④ 图片与文字的交界处羽化 —— 照参考站 blog.fqzlr.top 的同一手法。
+      参考站那张卡片的封面图自带一条 mask-image（我扒了它的 CSS：
+      .m3-blog-postcard__cover > picture > img 上的
+      linear-gradient(270deg, #000 0% 65%, #000000b8 75%, #00000059 83%, #0000)），
+      所以图片靠文字那一侧是**渐渐溶进卡片底色**的，没有一条硬邦邦的竖缝。
+      用户要的就是这个效果，下面四个断点逐值照抄，不是自拟的百分比。
+
+      怎么读这条渐变：270deg = 渐变朝左走，0% 是起点 = 图片的**右边缘**，
+      100% 是**左边缘**。于是 0~65%（图片右侧 65%）完全不透明，
+      65%→100% 分三档递减到全透明 —— 也就是靠文字那侧的 35% 宽度在羽化。
+      按本站 34% 的插图位算，羽化带约 12% 卡宽；参考站封面是 41.67% 的卡宽，
+      羽化带约 14.6%。比例同一量级，接缝的观感一致。
+
+      ⚠️ 为什么用 mask 而不是 filter: blur()：CSS 没有「只模糊一条边」的原生写法，
+         filter: blur() 会把整张图糊掉；要真的做「边缘高斯模糊」得把图片复制一层、
+         给副本上模糊再遮罩，那就得改主题模板。参考站用的就是 mask，照着来。
+      ⚠️ 遮罩加在 .post_cover（图片块）上，不加在 <img> 上：悬停时主题会给
+         .post-bg 加 transform: scale(1.1)，遮罩留在块上，渐变边界不会跟着图
+         一起放大漂移。参考站把 mask 写在 img 上，是因为它那条 img 自己就是
+         定位铺满的封面层，情形不同。
+      ⚠️ 占位块（规则 ②）套同一个遮罩：它是「等图的位置」，边界要么都软要么都硬，
+         五张卡片摆在一起才不会有「一张羽化、四张硬边」的割裂感。
+         占位块里那个小图片图标在正中（渐变 50% 处，仍在 0~65% 的全不透明区），
+         不会被羽化吃掉。 */
+html:not([data-theme='dark']) #recent-posts .recent-post-item .post_cover,
+html:not([data-theme='dark']) #recent-posts .recent-post-item:not(:has(.post_cover))::after {
+  -webkit-mask-image: linear-gradient(270deg, #000 0% 65%, #000000b8 75%, #00000059 83%, #0000 100%);
+  mask-image: linear-gradient(270deg, #000 0% 65%, #000000b8 75%, #00000059 83%, #0000 100%);
+}
+
+/* ⑤ 窄屏（主题在这一档把卡片竖过来：flex-direction: column、height: auto，
       真封面此时变成顶部 230px 的大图）。占位块不跟着上去 ——
       它是「等图的位置」，在手机上摆一块 230px 的淡粉空盒子只会白占首屏，
       所以收掉，文字恢复整行宽。真封面仍按主题的行为显示在顶部。 */
 @media (max-width: 768px) {
   html:not([data-theme='dark']) #recent-posts .recent-post-item:not(:has(.post_cover))::after {
     display: none;
+  }
+
+  /* 竖排时图片在顶部，交界线变成横的，那条「向左羽化」的遮罩会把图片左边
+     整条淡掉（看着像图没加载全），所以关掉。参考站在竖排 / 网格布局里
+     也是把 mask-image 设为 none 的（--compact / --regular / --relaxed 三处）。 */
+  html:not([data-theme='dark']) #recent-posts .recent-post-item .post_cover,
+  html:not([data-theme='dark']) #recent-posts .recent-post-item:not(:has(.post_cover))::after {
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 
   /* 竖排时文字恢复整行宽。同样不带 .no-cover：规则 ③ 的 (1,3,1) 会盖掉
