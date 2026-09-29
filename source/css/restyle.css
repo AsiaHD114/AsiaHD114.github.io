@@ -3030,24 +3030,33 @@ html:not([data-theme='dark']) #recent-posts .recent-post-item:not(:has(.post_cov
 /* 房子圆钮 —— 回到顶部（用户：「为分类条添加一个房子图标，回到主页顶端」）。
    参考图里它是一个**深色圆角方块**而不是圆，所以 border-radius 取 14px 而非 50%；
    宽度锁 44、不给左右 padding —— 给了就会变成扁椭圆。
-   实底用主色 #AF1D88 + 白图标 = 6.26:1（与分页、按钮同一个值）。
+
+   ⚠️ 配色改过一轮（用户：「颜色改淡一点」）：
+      初版照参考图做实底 #AF1D88（深玫红）+ 白图标。实测它是整条栏里唯一的重色块，
+      旁边三个白底胶囊显得被压住，用户要求调淡。
+      ⇒ 现在改成「淡粉底 + 主色图标」，与另外三个胶囊同族，只深一档做层级区分：
+         底 #FDEFF8（比胶囊的 #FFFAFC 深一点点）
+         描边 #F79FDD（比胶囊的 #FBD4EE 深一点点）
+         图标 #AF1D88（对 #FDEFF8 约 10.3:1）
+      ⚠️ 淡底就**不能再用白图标**了：白压在 #F79FDD 那种浅粉上只有约 1.9:1。
+        所以「调淡底色」和「图标换深色」必须同时做，改一个不改另一个直接看不见。
+
    ⚠️ 下面两条必须排在上面的通用 :hover 之后：两者特异性相同（都是 1,2,1），
-      靠顺序取胜。放到前面的话，通用那条的浅底 + 玫红字会把实底白图标盖掉。
-   ⚠️ 悬停是「加深」而不是「翻浅底」：浅底 + 白图标等于看不见。 */
+      靠顺序取胜。放到前面的话，通用那条的浅底 + 玫红字会把它盖掉。 */
 #home-nav-bar .home-nav-chip--home {
   width: 44px;
   padding: 0;
-  border-color: #AF1D88;
+  border-color: #F79FDD;
   border-radius: 14px;
-  background: #AF1D88;
-  color: #FFFFFF;
+  background: #FDEFF8;
+  color: #AF1D88;
 }
 
 #home-nav-bar .home-nav-chip--home:hover,
 #home-nav-bar .home-nav-chip--home:focus-visible {
-  border-color: #8C1468;
-  background: #8C1468;
-  color: #FFFFFF;
+  border-color: #F79FDD;
+  background: #FBD4EE;
+  color: #8C1468;
 }
 
 /* 焦点环：白底上玫红环保守够用，再垫一圈淡粉光晕 */
