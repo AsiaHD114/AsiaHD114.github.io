@@ -3027,6 +3027,29 @@ html:not([data-theme='dark']) #recent-posts .recent-post-item:not(:has(.post_cov
   color: #AF1D88;
 }
 
+/* 房子圆钮 —— 回到顶部（用户：「为分类条添加一个房子图标，回到主页顶端」）。
+   参考图里它是一个**深色圆角方块**而不是圆，所以 border-radius 取 14px 而非 50%；
+   宽度锁 44、不给左右 padding —— 给了就会变成扁椭圆。
+   实底用主色 #AF1D88 + 白图标 = 6.26:1（与分页、按钮同一个值）。
+   ⚠️ 下面两条必须排在上面的通用 :hover 之后：两者特异性相同（都是 1,2,1），
+      靠顺序取胜。放到前面的话，通用那条的浅底 + 玫红字会把实底白图标盖掉。
+   ⚠️ 悬停是「加深」而不是「翻浅底」：浅底 + 白图标等于看不见。 */
+#home-nav-bar .home-nav-chip--home {
+  width: 44px;
+  padding: 0;
+  border-color: #AF1D88;
+  border-radius: 14px;
+  background: #AF1D88;
+  color: #FFFFFF;
+}
+
+#home-nav-bar .home-nav-chip--home:hover,
+#home-nav-bar .home-nav-chip--home:focus-visible {
+  border-color: #8C1468;
+  background: #8C1468;
+  color: #FFFFFF;
+}
+
 /* 焦点环：白底上玫红环保守够用，再垫一圈淡粉光晕 */
 #home-nav-bar .home-nav-chip:focus-visible {
   outline: 2px solid #AF1D88;
