@@ -26,7 +26,7 @@ arp-scan -l
 
 使用 Yakit 搜索开放端口。
 
-<!-- 截图位 1：Yakit 端口扫描结果 → 补图后换成 ![端口扫描](/img/posts/subdomain-enum/01-ports.webp) -->
+![Yakit 端口扫描结果：80 与 22 端口开放](/img/posts/subdomain-enum/01-ports.webp)
 
 先看 80 端口。在前端页面里搜集到两条线索：
 
@@ -39,7 +39,7 @@ arp-scan -l
 
 访问 `/noteforkingfish.txt`。
 
-<!-- 截图位 2：访问 /noteforkingfish.txt → 补图后换成 ![noteforkingfish](/img/posts/subdomain-enum/02-note.webp) -->
+![/noteforkingfish.txt 页面内容：满屏 Ook 编码](/img/posts/subdomain-enum/02-note.webp)
 
 页面里是一串 Ook 编码，推荐一个在线解码站：[splitbrain 的 Ook 解码](https://www.splitbrain.org/services/ook)。
 
@@ -57,13 +57,13 @@ arp-scan -l
 
 使用 Yakit 的目录扫描模块。
 
-<!-- 截图位 3：Yakit 目录扫描 → 补图后换成 ![目录扫描](/img/posts/subdomain-enum/03-dirscan.webp) -->
+![Yakit 目录扫描结果](/img/posts/subdomain-enum/03-dirscan.webp)
 
 貌似没有什么重要信息。
 
 ### 3. 子域名收集
 
-<!-- 截图位 4：子域名收集结果 → 补图后换成 ![子域名收集](/img/posts/subdomain-enum/04-subdomain.webp) -->
+![Yakit 子域名收集任务的界面](/img/posts/subdomain-enum/04-subdomain.webp)
 
 有了新发现，得到了一个新的域名：
 
@@ -79,7 +79,7 @@ test.driftingblues.box
 
 接着再进行目录扫描，发现后台有 `robots.txt`。
 
-<!-- 截图位 5：robots.txt 被发现 → 补图后换成 ![robots.txt](/img/posts/subdomain-enum/05-robots.webp) -->
+![目录扫描发现 robots.txt](/img/posts/subdomain-enum/05-robots.webp)
 
 ### 4. 读 robots.txt 找密码
 
