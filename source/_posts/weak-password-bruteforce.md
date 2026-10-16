@@ -6,6 +6,8 @@ categories:
 tags: [安全, 渗透测试, 弱口令, 验证码绕过]
 ---
 
+> **免责声明**：本文仅供安全研究与防护加固参考。文中涉及的域名、账号、凭据、接口路径等均已脱敏处理。请勿将文中所述方法用于任何未获授权的系统；因不当使用造成的后果由使用者自行承担。
+
 ## 一、漏洞描述
 
 ### 1. 影响资产：
@@ -20,9 +22,9 @@ tags: [安全, 渗透测试, 弱口令, 验证码绕过]
 
 某企业的登录页面
 
-登录接口 POST /openapi/account/login/by 的"图形验证码 / 失败计数"防爆破阈值**绑定在客户端完全可控的 uuid 请求头**上，而非服务端 Session 或来源 IP。攻击者只需为每次请求随机更换 uuid 头，失败计数就永远无法累计，验证码永不触发，从而可对任意账号实施**无限次在线口令爆破**。
+登录接口 POST /openapi/account/login/\*\*\*\*\*\* 的"图形验证码 / 失败计数"防爆破阈值**绑定在客户端完全可控的 uuid 请求头**上，而非服务端 Session 或来源 IP。攻击者只需为每次请求随机更换 uuid 头，失败计数就永远无法累计，验证码永不触发，从而可对任意账号实施**无限次在线口令爆破**。
 
-该缺陷与已确认的**账号枚举**（/openapi/account/exist 无需登录/验证码即可判断账号是否存在）组合后，形成完整攻击链：**枚举有效账号 → 绕过防爆破在线撞库 → 取得有效会话令牌 → 账号接管**。测试中已用可枚举的真实账号配合字典（全程随机 uuid）在多次尝试下 **0 次验证码、0 次 WAF 拦截**，实际撞开真实账号 \*\*\*\*\*\* / \*\*\*\*\*\*，并取得服务端签发的有效 JWT 会话令牌，坐实端到端账号接管。
+该缺陷与已确认的**账号枚举**（/openapi/account/\*\*\*\*\*\* 无需登录/验证码即可判断账号是否存在）组合后，形成完整攻击链：**枚举有效账号 → 绕过防爆破在线撞库 → 取得有效会话令牌 → 账号接管**。测试中已用可枚举的真实账号配合字典（全程随机 uuid）在多次尝试下 **0 次验证码、0 次 WAF 拦截**，实际撞开真实账号 \*\*\*\*\*\* / \*\*\*\*\*\*，并取得服务端签发的有效 JWT 会话令牌，坐实端到端账号接管。
 
 **危害**：任意注册用户的账号可被接管（读取/篡改其账户资料、漏洞报告、资金/团队等业务数据）；结合账号枚举可批量撞库，影响面为全站用户。
 
@@ -34,7 +36,7 @@ tags: [安全, 渗透测试, 弱口令, 验证码绕过]
 
 ```bash
 # 头：Content-Type: application/json  X-Requested-With: XMLHttpRequest  X-Client-Type: web  uuid: <固定值>
-POST <https://******/openapi/account/login/by>
+POST <https://******/openapi/account/login/******>
 # body：
 {"login_by":"username","username":"admin","password":"<base64(Abcd1234)>"}
 ```
@@ -68,7 +70,7 @@ new-uuid #1 → {"code":400,"data":{"captcha":false},"msg":"账号或密码错�
 账号接管 PoC ：
 
 ```bash
-POST /openapi/account/login/by
+POST /openapi/account/login/******
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 X-Client-Type: web
@@ -80,10 +82,10 @@ uuid: <随机>
 命中响应（HTTP 200）：
 
 ```json
-{"code":200,"data":{"uid":18,"username":"******","type":1,
+{"code":200,"data":{"uid":******,"username":"******","type":1,
   "init_password":false,"mfa_secret":false,
   "token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.******.******",
-  "expired_at":1792314331},"msg":"success"}
+  "expired_at":******},"msg":"success"}
 ```
 
 ### 步骤 5
@@ -92,11 +94,11 @@ uuid: <随机>
 
 ```bash
 # 携带 Authorization: Bearer <token>
-POST /openapi/account/logout   → {"code":200,"data":{"url":"<https://******"},"msg":"success"}
-POST /openapi/account/mfa/verify → {"code":400,"data":{"code":["code必填"]}}   # 已过鉴权层，仅缺业务参数
+POST /openapi/account/******   → {"code":200,"data":{"url":"<https://******"},"msg":"success"}
+POST /openapi/account/mfa/****** → {"code":400,"data":{"code":["code必填"]}}   # 已过鉴权层，仅缺业务参数
 ```
 
-JWT payload 解码：{"uid":18,"username":"\*\*\*\*\*\*","type":1,"sub":"\*\*\*\*\*\*"} 
+JWT payload 解码：{"uid":\*\*\*\*\*\*,"username":"\*\*\*\*\*\*","type":1,"sub":"\*\*\*\*\*\*"} 
 
 —— 端到端账号接管成立。
 
@@ -110,7 +112,7 @@ JWT payload 解码：{"uid":18,"username":"\*\*\*\*\*\*","type":1,"sub":"\*\*\*\
 
 **弱口令策略**：强制密码复杂度校验（长度、字符类型、常见弱口令黑名单），禁用 888888、123456 等；对新注册/改密启用弱口令检测。
 
-**关闭未授权账号枚举**：/openapi/account/exist 增加图形验证码/频率限制，并统一"存在/不存在"的响应时延与文案，避免可批量区分。
+**关闭未授权账号枚举**：/openapi/account/\*\*\*\*\*\* 增加图形验证码/频率限制，并统一"存在/不存在"的响应时延与文案，避免可批量区分。
 
 **对已泄露账号处置**：立即通知 账户 等受影响账号改密，并使其当前所有会话失效。
 
