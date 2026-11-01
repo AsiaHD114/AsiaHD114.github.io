@@ -260,7 +260,12 @@ post_edit:
 
 # 相关文章推荐
 related_post:
-  enable: true
+  # ⚠️ 用户 2026-10-28：「去除相关推荐」。
+  #    主题 post.pug 第 30 行 `if theme.related_post && theme.related_post.enable`
+  #    是唯一判据，关掉后整块（标题「相关推荐」+ 4 张卡片）不再渲染，
+  #    文章 HTML 里连 .relatedPosts 容器都不会出现。
+  #    恢复：改回 true 即可；restyle.css ㉘ 那节的毛玻璃样式还留着，不用重写。
+  enable: false
   # 显示的文章数量
   limit: 6
   # 可选：created / updated
