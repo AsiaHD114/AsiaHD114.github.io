@@ -2817,9 +2817,15 @@ html:not([data-theme='dark']) #sidebar-menus .site-data {
       用户要的是参考站那种固定版式，所以规则 ① 把两个方向都压成右侧。
       封面宽度也在规则 ① 里钉成 34%，与占位块同宽 —— 不钉的话主题给 42%，
       同一页里配了封面和没配封面的卡片会宽窄不一。
-   ⚠️ 占位块不引入任何图片：淡粉底 + 一个内联 SVG 画的小图片图标
-      （与 ㉑ 的波浪同一种写法 —— 把 SVG 塞进 background-image 的 data URI，
-      里面的 # 必须写成 %23）。
+   ⚠️ 2026-10-28 用户进一步要求「插图去掉，不显示插图，也不显示图片符号，
+      但保留那一小撮渐变」：于是
+        · 首页封面整体关掉（_config.butterfly.yml 的 cover.index_enable: false）
+          → 主题连 .post_cover 都不输出，⑤所以现在每张卡片都走下面的 ::after 占位；
+        · ::after 里的内联 SVG 小图片图标删掉，只留淡粉渐变。
+      规则 ① 现在不生效（没有 .post_cover 可作用于），但**故意留着**：
+      想恢复封面时只要把 index_enable 改回 true，①③④⑤ 立刻又能用。
+    ⚠️ 占位块不引入任何图片文件：纯渐变（把 SVG 塞进 background-image 的
+       data URI 那种写法已经不用了，见上）。
 
    依据（ui-ux-pro-max）：
      · Content Jumping（High）："Reserve appropriate space" —— 插图位用固定比例
@@ -2853,12 +2859,13 @@ html:not([data-theme='dark']) #recent-posts .recent-post-item:not(:has(.post_cov
   flex: 0 0 34%;
   height: 100%;
   background-color: #FDEFF8;
-  background-image:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect x='3' y='5' width='18' height='14' rx='2.5' fill='none' stroke='%23E7A9D2' stroke-width='1.5'/><circle cx='8.5' cy='10' r='1.7' fill='%23E7A9D2'/><path d='M4.2 17.2l4.6-4.4 3.2 3 2.5-2.3 5.3 4.4' fill='none' stroke='%23E7A9D2' stroke-width='1.5' stroke-linejoin='round'/></svg>"),
-    linear-gradient(135deg, #FFFFFF 0%, #FDEFF8 48%, #FBD4EE 100%);
-  background-repeat: no-repeat, no-repeat;
-  background-position: center, center;
-  background-size: 40px 40px, cover;
+  /* 只留渐变，不再画那个内联 SVG 小图片图标 —— 用户 2026-10-28：
+     「不显示插图，也不显示图片符号，但保留那一小撮渐变」。
+     所以这里从两层 background-image 收成一层，相关定位/尺寸也从逗号列表收回单值。 */
+  background-image: linear-gradient(135deg, #FFFFFF 0%, #FDEFF8 48%, #FBD4EE 100%);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
 }
 
 /* ③ 文字列让位给右侧插图位。

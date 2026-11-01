@@ -29,7 +29,6 @@ menu:
     归档: /archives/ || fas fa-archive
     分类: /categories/ || fas fa-folder-open
     标签: /tags/ || fas fa-tags
-    相册: /album/ || fas fa-images
   友链: /link/ || fas fa-link
   聊天喵: /message/ || fas fa-paper-plane
   关于笔者: /about/ || fas fa-heart
@@ -108,7 +107,13 @@ background:
 
 cover:
   # 是否禁用封面
-  index_enable: true
+  # ⚠️ 用户 2026-10-28：「文章旁边的插图去掉，不显示插图，也不显示图片符号，
+  #    但保留那一小撮渐变」。关掉这个开关后，主题模板 includes/mixins/indexPostUI.pug
+  #    第 14 行 `if postCover && theme.cover.index_enable` 不再成立，首页卡片
+  #    **连 .post_cover 都不输出**（图片不下载、DOM 里也没有），右侧那块改由
+  #    restyle.css ㊲② 的 ::after 纯渐变占位顶上（内联 SVG 图标已按同一要求删掉）。
+  #    想恢复每篇自己的封面：改回 true 即可 —— ㊲ 的 ①③④⑤ 都还留着，不用重写。
+  index_enable: false
   # 侧栏「最新文章」不显示封面缩略图（用户 2026-09-26 要求「这里的文章不显示图片」）。
   #
   # 起因：侧栏那个列表里只有 hello-world 一条带图，因为**只有它在 front-matter 里
@@ -118,7 +123,7 @@ cover:
   #
   # 这是主题的原生开关，与归档页那次（archives_enable: false）同一个套路：
   # 关掉之后主题会给每个条目加 .no-cover，并不再输出 .thumbnail > img。
-  # ⚠️ 只影响侧栏；首页文章卡片（index_enable）照旧。
+  # ⚠️ 只影响侧栏；首页文章卡片看上面的 index_enable（现已一并关闭）。
   aside_enable: false
   # 归档页不显示封面缩略图（用户 2026-09-26 明确要求「归档处不显示图片」）。
   # 这是主题的原生开关：article-sort.pug 第 6 行判 !theme.cover.archives_enable
